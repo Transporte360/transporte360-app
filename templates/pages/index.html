@@ -1,456 +1,320 @@
+cat > templates/pages/index.html <<'HTML'
 {% extends "layouts/base.html" %}
 {% set title = "Transporte360 - TMS" %}
 
 {% block content %}
-<!-- ================= LOGIN VIEW ================= -->
-  <section id="viewLogin" class="login-wrap">
-    <div class="login-card">
-      <div class="login-head">
-        <div class="login-brand">
-          <div class="login-logo" aria-hidden="true">
-            <!-- Icono simple -->
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-              <path d="M4 12l8-6 8 6" stroke="#E67E22" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M7 12v8h10v-8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="12" cy="12" r="2" fill="#E67E22"/>
-            </svg>
-          </div>
-          <div class="col" style="gap:2px">
-            <div class="h2" style="margin:0; font-size:22px">Transporte360</div>
-            <div class="tiny">Sistema de Gestión de Flotas</div>
-          </div>
+
+<section id="viewApp">
+  <div class="app-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M4 12l8-6 8 6" stroke="#E67E22" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7 12v8h10v-8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
-
-        <div class="sep"></div>
-
         <div class="col" style="gap:4px">
-          <div class="h2">Iniciar Sesión</div>
-          <div class="muted" style="font-size:13px">Ingrese sus credenciales para acceder al sistema</div>
-        </div>
-      </div>
-
-      <div id="loginError" class="alert hidden">
-        <span>⚠️</span>
-        <div>
-          <div>Credenciales incorrectas</div>
-          <div class="tiny" style="color:#7f1d1d; opacity:.85">Revise usuario y PIN</div>
+          <div style="font-weight:900; font-size:16px; line-height:1">Transporte360</div>
+          <div class="badge">TMS · Operaciones</div>
         </div>
       </div>
 
       <div style="height:12px"></div>
 
-      <form id="loginForm" class="col" style="gap:12px; position:relative">
-        <div class="field">
-          <div class="label">👤 Usuario</div>
-          <div style="position:relative">
-            <svg class="icon-left" viewBox="0 0 24 24" fill="none">
-              <path d="M20 21a8 8 0 10-16 0" stroke="rgba(30,58,95,.75)" stroke-width="2" stroke-linecap="round"/>
-              <path d="M12 13a4 4 0 100-8 4 4 0 000 8z" stroke="rgba(30,58,95,.75)" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <input class="input" id="username" name="username" placeholder="manager / driver1 / driver2" autocomplete="username" required />
+      <div class="tiny" style="color:rgba(255,255,255,.72); padding:0 6px">
+        Usuario: <span id="userName" style="color:#fff; font-weight:900">{{ user.name }}</span><br/>
+        Rol: <span id="userRole" style="color:#fff; font-weight:900">{{ user.role }}</span>
+      </div>
+
+      <div class="nav" id="nav">
+        <a href="#" data-screen="dashboard" class="active">
+          <span class="nav-ic">📊</span> Dashboard
+        </a>
+        <a href="#" data-screen="trips">
+          <span class="nav-ic">🧾</span> Viajes
+        </a>
+        <a href="#" data-screen="fuel">
+          <span class="nav-ic">⛽</span> Repostajes
+        </a>
+        <a href="#" data-screen="drivers">
+          <span class="nav-ic">👷</span> Conductores
+        </a>
+        <a href="#" data-screen="vehicles">
+          <span class="nav-ic">🚚</span> Vehículos
+        </a>
+        <a href="#" data-screen="docs">
+          <span class="nav-ic">📎</span> Documentos
+        </a>
+        <a href="#" data-screen="settings">
+          <span class="nav-ic">⚙️</span> Ajustes
+        </a>
+
+        <div style="height:10px"></div>
+
+        <a href="/logout" id="logoutBtn">
+          <span class="nav-ic">🚪</span> Salir
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div class="topbar">
+        <div class="col" style="gap:2px">
+          <div class="h1" id="screenTitle">Panel de Gestión</div>
+          <div class="muted" id="screenSubtitle">Resumen mensual de operaciones — Enero 2026</div>
+        </div>
+
+        <div class="right">
+          <div class="pill">
+            <span class="tiny">Estado:</span>
+            <span class="chip up">Operativo</span>
+          </div>
+          <button class="btn btn-primary" type="button" id="addActionBtn">+ Nueva acción</button>
+        </div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <section id="screen-dashboard" class="col" style="gap:14px">
+
+        <div class="grid g4">
+          <div class="stat">
+            <div class="row" style="justify-content:space-between">
+              <div class="h2">Kilómetros Totales</div>
+              <span class="chip up">+12.5%</span>
+            </div>
+            <div class="kpi">45.280</div>
+            <div class="tiny">Tendencia positiva vs mes anterior</div>
+          </div>
+
+          <div class="stat">
+            <div class="row" style="justify-content:space-between">
+              <div class="h2">Kilómetros Vacíos</div>
+              <span class="chip down">18.2%</span>
+            </div>
+            <div class="kpi">8.241</div>
+            <div class="tiny">Tendencia negativa -3.1% vs objetivo</div>
+          </div>
+
+          <div class="stat">
+            <div class="row" style="justify-content:space-between">
+              <div class="h2">Ingresos Totales</div>
+              <span class="chip up">+8.7%</span>
+            </div>
+            <div class="kpi">€54.336</div>
+            <div class="tiny">Tendencia positiva vs mes anterior</div>
+          </div>
+
+          <div class="stat">
+            <div class="row" style="justify-content:space-between">
+              <div class="h2">Beneficio Neto</div>
+              <span class="chip up">+15.3%</span>
+            </div>
+            <div class="kpi">€12.847</div>
+            <div class="tiny">Margen: <b>23.6%</b></div>
           </div>
         </div>
 
-        <div class="field">
-          <div class="label">🔒 PIN (4 dígitos)</div>
-          <div style="position:relative">
-            <svg class="icon-left" viewBox="0 0 24 24" fill="none">
-              <path d="M7 11V8a5 5 0 0110 0v3" stroke="rgba(30,58,95,.75)" stroke-width="2" stroke-linecap="round"/>
-              <path d="M7 11h10a2 2 0 012 2v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6a2 2 0 012-2z" stroke="rgba(30,58,95,.75)" stroke-width="2"/>
-            </svg>
-            <input class="input" id="pin" name="pin" placeholder="••••" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required />
-            <button type="button" class="icon-btn" id="togglePin" aria-label="Mostrar/Ocultar PIN">👁️</button>
+        <div class="grid g3">
+          <div class="card card-pad">
+            <div class="row" style="justify-content:space-between">
+              <div class="h2">Costes Variables</div>
+              <span class="chip">€18.560</span>
+            </div>
+            <div class="tiny" style="margin-top:6px">Combustible <b>€12.340</b> · Peajes <b>€4.520</b> · Otros <b>€1.700</b></div>
+            <div class="chart-area" style="margin-top:12px; height:140px">placeholder gráfico variables</div>
           </div>
-          <div class="tiny">Ejemplo: manager=1234, driver1=5678, driver2=9012</div>
-        </div>
 
-        <button class="btn btn-primary" type="submit" style="position:relative; z-index:1">
-          Entrar
-          <span style="width:6px"></span>
-          <span style="display:inline-flex; width:8px; height:8px; border-radius:999px; background:rgba(255,255,255,.65)"></span>
-        </button>
-
-        <button class="btn btn-ghost" type="button" id="goDemo">
-          Ver demo dashboard (sin login)
-        </button>
-
-        <div class="sep"></div>
-
-        <div class="tiny">
-          © 2026 Transporte360. Si hay problemas, contacte al administrador.
-        </div>
-      </form>
-    </div>
-  </section>
-
-  <!-- ================= APP VIEW ================= -->
-  <section id="viewApp" class="hidden">
-    <div class="app-shell">
-
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <div class="brand">
-          <div class="logo" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path d="M4 12l8-6 8 6" stroke="#E67E22" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M7 12v8h10v-8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+          <div class="card card-pad">
+            <div class="row" style="justify-content:space-between">
+              <div class="h2">Combustible Real</div>
+              <span class="chip">€12.340</span>
+            </div>
+            <div class="tiny" style="margin-top:6px">Litros totales <b>8,227 L</b> · Precio medio <b>€1.50/L</b> · Consumo <b>18.2 L/100km</b></div>
+            <div class="chart-area" style="margin-top:12px; height:140px">placeholder gráfico combustible</div>
           </div>
-          <div class="col" style="gap:4px">
-            <div style="font-weight:900; font-size:16px; line-height:1">Transporte360</div>
-            <div class="badge">TMS · Operaciones</div>
+
+          <div class="card card-pad">
+            <div class="row" style="justify-content:space-between">
+              <div class="h2">Costes Fijos Asignados</div>
+              <span class="chip">€10.589</span>
+            </div>
+            <div class="tiny" style="margin-top:6px">Seguros <b>€4.200</b> · Mantenimiento <b>€3.890</b> · Otros <b>€2.499</b></div>
+            <div class="chart-area" style="margin-top:12px; height:140px">placeholder gráfico fijos</div>
           </div>
         </div>
 
-        <div style="height:12px"></div>
-
-        <div class="tiny" style="color:rgba(255,255,255,.72); padding:0 6px">
-          Usuario: <span id="userName" style="color:#fff; font-weight:900">—</span><br/>
-          Rol: <span id="userRole" style="color:#fff; font-weight:900">—</span>
-        </div>
-
-        <div class="nav" id="nav">
-          <a href="#" data-screen="dashboard" class="active">
-            <span class="nav-ic">📊</span> Dashboard
-          </a>
-          <a href="#" data-screen="trips">
-            <span class="nav-ic">🧾</span> Viajes
-          </a>
-          <a href="#" data-screen="fuel">
-            <span class="nav-ic">⛽</span> Repostajes
-          </a>
-          <a href="#" data-screen="drivers">
-            <span class="nav-ic">👷</span> Conductores
-          </a>
-          <a href="#" data-screen="vehicles">
-            <span class="nav-ic">🚚</span> Vehículos
-          </a>
-          <a href="#" data-screen="docs">
-            <span class="nav-ic">📎</span> Documentos
-          </a>
-          <a href="#" data-screen="settings">
-            <span class="nav-ic">⚙️</span> Ajustes
-          </a>
-
-          <div style="height:10px"></div>
-
-          <a href="#" id="logoutBtn">
-            <span class="nav-ic">🚪</span> Salir
-          </a>
-        </div>
-      </aside>
-
-      <!-- Main Content -->
-      <main class="content">
-        <div class="topbar">
-          <div class="col" style="gap:2px">
-            <div class="h1" id="screenTitle">Panel de Gestión</div>
-            <div class="muted" id="screenSubtitle">Resumen mensual de operaciones — Enero 2026</div>
+        <div class="grid g2">
+          <div class="chart">
+            <div class="row" style="justify-content:space-between">
+              <div class="h2">Tendencia Mensual</div>
+              <span class="tiny">Ingresos vs Costes</span>
+            </div>
+            <div class="chart-area">placeholder chart line/bar</div>
           </div>
 
-          <div class="right">
-            <div class="pill">
-              <span class="tiny">Estado:</span>
-              <span class="chip up">Operativo</span>
+          <div class="chart">
+            <div class="row" style="justify-content:space-between">
+              <div class="h2">Distribución de Viajes</div>
+              <span class="tiny">Total: <b>142</b></span>
             </div>
-            <button class="btn btn-primary" type="button" id="addActionBtn">+ Nueva acción</button>
+            <div class="chart-area">placeholder donut / pie</div>
+            <div class="row" style="justify-content:space-between">
+              <span class="tiny"><b>81.8%</b> Cargados (116)</span>
+              <span class="tiny"><b>18.2%</b> Vacíos (26)</span>
+            </div>
           </div>
         </div>
 
-        <!-- DASHBOARD -->
-        <section id="screen-dashboard" class="col" style="gap:14px">
-
-          <div class="grid g4">
-            <div class="stat">
-              <div class="row" style="justify-content:space-between">
-                <div class="h2">Kilómetros Totales</div>
-                <span class="chip up">+12.5%</span>
-              </div>
-              <div class="kpi">45.280</div>
-              <div class="tiny">Tendencia positiva vs mes anterior</div>
-            </div>
-
-            <div class="stat">
-              <div class="row" style="justify-content:space-between">
-                <div class="h2">Kilómetros Vacíos</div>
-                <span class="chip down">18.2%</span>
-              </div>
-              <div class="kpi">8.241</div>
-              <div class="tiny">Tendencia negativa -3.1% vs objetivo</div>
-            </div>
-
-            <div class="stat">
-              <div class="row" style="justify-content:space-between">
-                <div class="h2">Ingresos Totales</div>
-                <span class="chip up">+8.7%</span>
-              </div>
-              <div class="kpi">€54.336</div>
-              <div class="tiny">Tendencia positiva vs mes anterior</div>
-            </div>
-
-            <div class="stat">
-              <div class="row" style="justify-content:space-between">
-                <div class="h2">Beneficio Neto</div>
-                <span class="chip up">+15.3%</span>
-              </div>
-              <div class="kpi">€12.847</div>
-              <div class="tiny">Margen: <b>23.6%</b></div>
-            </div>
-          </div>
-
-          <div class="grid g3">
-            <div class="card card-pad">
-              <div class="row" style="justify-content:space-between">
-                <div class="h2">Costes Variables</div>
-                <span class="chip">€18.560</span>
-              </div>
-              <div class="tiny" style="margin-top:6px">Combustible <b>€12.340</b> · Peajes <b>€4.520</b> · Otros <b>€1.700</b></div>
-              <div class="chart-area" style="margin-top:12px; height:140px">placeholder gráfico variables</div>
-            </div>
-
-            <div class="card card-pad">
-              <div class="row" style="justify-content:space-between">
-                <div class="h2">Combustible Real</div>
-                <span class="chip">€12.340</span>
-              </div>
-              <div class="tiny" style="margin-top:6px">Litros totales <b>8,227 L</b> · Precio medio <b>€1.50/L</b> · Consumo <b>18.2 L/100km</b></div>
-              <div class="chart-area" style="margin-top:12px; height:140px">placeholder gráfico combustible</div>
-            </div>
-
-            <div class="card card-pad">
-              <div class="row" style="justify-content:space-between">
-                <div class="h2">Costes Fijos Asignados</div>
-                <span class="chip">€10.589</span>
-              </div>
-              <div class="tiny" style="margin-top:6px">Seguros <b>€4.200</b> · Mantenimiento <b>€3.890</b> · Otros <b>€2.499</b></div>
-              <div class="chart-area" style="margin-top:12px; height:140px">placeholder gráfico fijos</div>
-            </div>
+        <div class="card card-pad">
+          <div class="row" style="justify-content:space-between; margin-bottom:10px">
+            <div class="h2">Actividad Reciente</div>
+            <span class="tiny">Hoy</span>
           </div>
 
           <div class="grid g2">
-            <div class="chart">
+            <div class="card card-pad" style="box-shadow:none; background:#fbfdff">
               <div class="row" style="justify-content:space-between">
-                <div class="h2">Tendencia Mensual</div>
-                <span class="tiny">Ingresos vs Costes</span>
+                <div style="font-weight:900">Miguel Fernández</div>
+                <span class="chip up">Cargado</span>
               </div>
-              <div class="chart-area">placeholder chart line/bar</div>
+              <div class="tiny">ABC-1234 · 15/01/2026</div>
+              <div class="row" style="justify-content:space-between; margin-top:8px">
+                <div style="font-weight:800; color:var(--primary)">Madrid → Barcelona</div>
+                <div class="tiny">628 km</div>
+              </div>
+              <div class="row" style="justify-content:space-between; margin-top:6px">
+                <div class="tiny">Ingresos</div>
+                <div style="font-weight:900">€753.60</div>
+              </div>
             </div>
 
-            <div class="chart">
+            <div class="card card-pad" style="box-shadow:none; background:#fbfdff">
               <div class="row" style="justify-content:space-between">
-                <div class="h2">Distribución de Viajes</div>
-                <span class="tiny">Total: <b>142</b></span>
+                <div style="font-weight:900">Ana Martínez</div>
+                <span class="chip down">Vacío</span>
               </div>
-              <div class="chart-area">placeholder donut / pie</div>
-              <div class="row" style="justify-content:space-between">
-                <span class="tiny"><b>81.8%</b> Cargados (116)</span>
-                <span class="tiny"><b>18.2%</b> Vacíos (26)</span>
+              <div class="tiny">XYZ-5678 · 15/01/2026</div>
+              <div class="row" style="justify-content:space-between; margin-top:8px">
+                <div style="font-weight:800; color:var(--primary)">Valencia → Sevilla</div>
+                <div class="tiny">— km</div>
               </div>
-            </div>
-          </div>
-
-          <div class="card card-pad">
-            <div class="row" style="justify-content:space-between; margin-bottom:10px">
-              <div class="h2">Actividad Reciente</div>
-              <span class="tiny">Hoy</span>
-            </div>
-
-            <div class="grid g2">
-              <div class="card card-pad" style="box-shadow:none; background:#fbfdff">
-                <div class="row" style="justify-content:space-between">
-                  <div style="font-weight:900">Miguel Fernández</div>
-                  <span class="chip up">Cargado</span>
-                </div>
-                <div class="tiny">ABC-1234 · 15/01/2026</div>
-                <div class="row" style="justify-content:space-between; margin-top:8px">
-                  <div style="font-weight:800; color:var(--primary)">Madrid → Barcelona</div>
-                  <div class="tiny">628 km</div>
-                </div>
-                <div class="row" style="justify-content:space-between; margin-top:6px">
-                  <div class="tiny">Ingresos</div>
-                  <div style="font-weight:900">€753.60</div>
-                </div>
-              </div>
-
-              <div class="card card-pad" style="box-shadow:none; background:#fbfdff">
-                <div class="row" style="justify-content:space-between">
-                  <div style="font-weight:900">Ana Martínez</div>
-                  <span class="chip down">Vacío</span>
-                </div>
-                <div class="tiny">XYZ-5678 · 15/01/2026</div>
-                <div class="row" style="justify-content:space-between; margin-top:8px">
-                  <div style="font-weight:800; color:var(--primary)">Valencia → Sevilla</div>
-                  <div class="tiny">— km</div>
-                </div>
-                <div class="row" style="justify-content:space-between; margin-top:6px">
-                  <div class="tiny">Ingresos</div>
-                  <div style="font-weight:900">€0.00</div>
-                </div>
+              <div class="row" style="justify-content:space-between; margin-top:6px">
+                <div class="tiny">Ingresos</div>
+                <div style="font-weight:900">€0.00</div>
               </div>
             </div>
           </div>
+        </div>
 
-        </section>
+      </section>
 
-        <!-- OTHER SCREENS (placeholders con mismo formato) -->
-        <section id="screen-trips" class="hidden">
-          <div class="card card-pad">
-            <div class="h2">Viajes</div>
-            <div class="muted">Aquí va tu tabla/lógica actual — solo formato ya está.</div>
-          </div>
-        </section>
+      <!-- OTHER SCREENS -->
+      <section id="screen-trips" class="hidden">
+        <div class="card card-pad">
+          <div class="h2">Viajes</div>
+          <div class="muted">Aquí va tu tabla/lógica real.</div>
+        </div>
+      </section>
 
-        <section id="screen-fuel" class="hidden">
-          <div class="card card-pad">
-            <div class="h2">Repostajes</div>
-            <div class="muted">Aquí metes tu sección de repostajes con este mismo estilo.</div>
-          </div>
-        </section>
+      <section id="screen-fuel" class="hidden">
+        <div class="card card-pad">
+          <div class="h2">Repostajes</div>
+          <div class="muted">Aquí metes tu sección de repostajes.</div>
+        </div>
+      </section>
 
-        <section id="screen-drivers" class="hidden">
-          <div class="card card-pad">
-            <div class="h2">Conductores</div>
-            <div class="muted">Listado + alta/edición con cards y botones.</div>
-          </div>
-        </section>
+      <section id="screen-drivers" class="hidden">
+        <div class="card card-pad">
+          <div class="h2">Conductores</div>
+          <div class="muted">Listado + alta/edición.</div>
+        </div>
+      </section>
 
-        <section id="screen-vehicles" class="hidden">
-          <div class="card card-pad">
-            <div class="h2">Vehículos</div>
-            <div class="muted">Ficha del camión, ITV, seguro, etc.</div>
-          </div>
-        </section>
+      <section id="screen-vehicles" class="hidden">
+        <div class="card card-pad">
+          <div class="h2">Vehículos</div>
+          <div class="muted">Ficha del camión, ITV, seguro, etc.</div>
+        </div>
+      </section>
 
-        <section id="screen-docs" class="hidden">
-          <div class="card card-pad">
-            <div class="h2">Documentos</div>
-            <div class="muted">CMR, facturas, recibos…</div>
-          </div>
-        </section>
+      <section id="screen-docs" class="hidden">
+        <div class="card card-pad">
+          <div class="h2">Documentos</div>
+          <div class="muted">CMR, facturas, recibos…</div>
+        </div>
+      </section>
 
-        <section id="screen-settings" class="hidden">
-          <div class="card card-pad">
-            <div class="h2">Ajustes</div>
-            <div class="muted">Roles, usuarios, parámetros, etc.</div>
-          </div>
-        </section>
+      <section id="screen-settings" class="hidden">
+        <div class="card card-pad">
+          <div class="h2">Ajustes</div>
+          <div class="muted">Roles, usuarios, parámetros, etc.</div>
+        </div>
+      </section>
 
-      </main>
-    </div>
-  </section>
+    </main>
+  </div>
+</section>
 
-  <script>
-    // ===== Mock login (solo demo) =====
-    const users = {
-      manager: { pin: "1234", role: "manager", name: "Carlos Rodríguez" },
-      driver1:  { pin: "5678", role: "driver",  name: "Miguel Fernández" },
-      driver2:  { pin: "9012", role: "driver",  name: "Ana Martínez" },
-    };
+<script>
+  const nav = document.getElementById("nav");
+  const screenTitle = document.getElementById("screenTitle");
+  const screenSubtitle = document.getElementById("screenSubtitle");
+  const addActionBtn = document.getElementById("addActionBtn");
 
-    const viewLogin = document.getElementById("viewLogin");
-    const viewApp = document.getElementById("viewApp");
+  function setActiveNav(screen){
+    [...nav.querySelectorAll("a[data-screen]")].forEach(a => {
+      a.classList.toggle("active", a.dataset.screen === screen);
+    });
+  }
 
-    const loginForm = document.getElementById("loginForm");
-    const username = document.getElementById("username");
-    const pin = document.getElementById("pin");
-    const loginError = document.getElementById("loginError");
-    const togglePin = document.getElementById("togglePin");
-    const goDemo = document.getElementById("goDemo");
-
-    const userName = document.getElementById("userName");
-    const userRole = document.getElementById("userRole");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    const nav = document.getElementById("nav");
-    const screenTitle = document.getElementById("screenTitle");
-    const screenSubtitle = document.getElementById("screenSubtitle");
-    const addActionBtn = document.getElementById("addActionBtn");
-
-    togglePin.addEventListener("click", () => {
-      pin.type = (pin.type === "password") ? "text" : "password";
+  function switchScreen(screen){
+    const screens = ["dashboard","trips","fuel","drivers","vehicles","docs","settings"];
+    screens.forEach(s => {
+      const el = document.getElementById("screen-" + s);
+      if(!el) return;
+      el.classList.toggle("hidden", s !== screen);
     });
 
-    function showApp(u){
-      loginError.classList.add("hidden");
-      viewLogin.classList.add("hidden");
-      viewApp.classList.remove("hidden");
-
-      userName.textContent = u?.name || "Demo";
-      userRole.textContent = u?.role || "manager";
-
-      // Por defecto dashboard
-      switchScreen("dashboard");
-      setActiveNav("dashboard");
+    if(screen === "dashboard"){
+      screenTitle.textContent = "Panel de Gestión";
+      screenSubtitle.textContent = "Resumen mensual de operaciones — Enero 2026";
+    } else {
+      const titles = {
+        trips:"Viajes",
+        fuel:"Repostajes",
+        drivers:"Conductores",
+        vehicles:"Vehículos",
+        docs:"Documentos",
+        settings:"Ajustes"
+      };
+      screenTitle.textContent = titles[screen] || "Sección";
+      screenSubtitle.textContent = "Transporte360 — Operaciones";
     }
+  }
 
-    function showLogin(){
-      viewApp.classList.add("hidden");
-      viewLogin.classList.remove("hidden");
-      username.value = "";
-      pin.value = "";
-    }
+  nav.addEventListener("click", (e) => {
+    const a = e.target.closest("a[data-screen]");
+    if(!a) return;
+    e.preventDefault();
+    const screen = a.dataset.screen;
+    setActiveNav(screen);
+    switchScreen(screen);
+  });
 
-    loginForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const u = users[username.value?.trim()];
-      if(!u || u.pin !== pin.value?.trim()){
-        loginError.classList.remove("hidden");
-        return;
-      }
-      showApp(u);
-    });
+  addActionBtn?.addEventListener("click", () => {
+    alert("Aquí conectas tu lógica: nuevo viaje / nuevo repostaje / etc.");
+  });
 
-    goDemo.addEventListener("click", () => showApp(null));
+  // Arranque: dashboard
+  setActiveNav("dashboard");
+  switchScreen("dashboard");
+</script>
 
-    logoutBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      showLogin();
-    });
-
-    function setActiveNav(screen){
-      [...nav.querySelectorAll("a[data-screen]")].forEach(a => {
-        a.classList.toggle("active", a.dataset.screen === screen);
-      });
-    }
-
-    function switchScreen(screen){
-      const screens = ["dashboard","trips","fuel","drivers","vehicles","docs","settings"];
-      screens.forEach(s => {
-        document.getElementById("screen-" + s).classList.toggle("hidden", s !== screen);
-      });
-
-      if(screen === "dashboard"){
-        screenTitle.textContent = "Panel de Gestión";
-        screenSubtitle.textContent = "Resumen mensual de operaciones — Enero 2026";
-      } else {
-        const titles = {
-          trips:"Viajes",
-          fuel:"Repostajes",
-          drivers:"Conductores",
-          vehicles:"Vehículos",
-          docs:"Documentos",
-          settings:"Ajustes"
-        };
-        screenTitle.textContent = titles[screen] || "Sección";
-        screenSubtitle.textContent = "Transporte360 — Operaciones";
-      }
-    }
-
-    nav.addEventListener("click", (e) => {
-      const a = e.target.closest("a[data-screen]");
-      if(!a) return;
-      e.preventDefault();
-      const screen = a.dataset.screen;
-      setActiveNav(screen);
-      switchScreen(screen);
-    });
-
-    addActionBtn.addEventListener("click", () => {
-      alert("Aquí conectas tu lógica: nuevo viaje / nuevo repostaje / etc. (solo UI ahora).");
-    });
-
-    // Arranque: login visible
-    showLogin();
-  </script>
 {% endblock %}
+HTML
 
+             
