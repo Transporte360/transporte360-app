@@ -372,3 +372,23 @@
   color: #7a1f1f;
   font-weight: 700;
 }
+
+/* Fix layout login: card + form juntos (no separados) */
+#viewLogin.login-wrap{
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+}
+
+#viewLogin .login-card{
+  width: min(720px, 94vw);
+}
+
+#viewLogin .login-card form{
+  width: 100%;
+}
+
