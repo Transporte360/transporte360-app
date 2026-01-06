@@ -4,3 +4,10 @@ __pycache__/
 *.db
 uploads/
 .DS_Store
+
+# editor backups / typos
+*.save
+*.swp
+*.swo
+*.sb-*
+*.apy
