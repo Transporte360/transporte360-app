@@ -1,0 +1,20 @@
+{% extends "layouts/base.html" %}
+{% set title = "Login" %}
+
+{% block content %}
+  <h1>Acceso</h1>
+
+  {% if error %}
+    <div class="alert">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" class="card">
+    <label>Usuario</label>
+    <input name="username" autocomplete="username" required>
+
+    <label>PIN</label>
+    <input name="pin" type="password" autocomplete="current-password" required>
+
+    <button type="submit">Entrar</button>
+  </form>
+{% endblock %}
