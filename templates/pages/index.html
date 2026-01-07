@@ -1,4 +1,3 @@
-cat > templates/pages/index.html <<'HTML'
 {% extends "layouts/base.html" %}
 {% set title = "Transporte360 - TMS" %}
 
@@ -30,27 +29,37 @@ cat > templates/pages/index.html <<'HTML'
       </div>
 
       <div class="nav" id="nav">
+        <!-- Siempre visible -->
         <a href="#" data-screen="dashboard" class="active">
           <span class="nav-ic">📊</span> Dashboard
         </a>
+
         <a href="#" data-screen="trips">
           <span class="nav-ic">🧾</span> Viajes
         </a>
+
         <a href="#" data-screen="fuel">
           <span class="nav-ic">⛽</span> Repostajes
         </a>
-        <a href="#" data-screen="drivers">
-          <span class="nav-ic">👷</span> Conductores
-        </a>
-        <a href="#" data-screen="vehicles">
-          <span class="nav-ic">🚚</span> Vehículos
-        </a>
+
         <a href="#" data-screen="docs">
           <span class="nav-ic">📎</span> Documentos
         </a>
+
+        <!-- Solo MANAGER -->
+        {% if user.role == "manager" %}
+        <a href="#" data-screen="drivers">
+          <span class="nav-ic">👷</span> Conductores
+        </a>
+
+        <a href="#" data-screen="vehicles">
+          <span class="nav-ic">🚚</span> Vehículos
+        </a>
+
         <a href="#" data-screen="settings">
           <span class="nav-ic">⚙️</span> Ajustes
         </a>
+        {% endif %}
 
         <div style="height:10px"></div>
 
@@ -227,6 +236,7 @@ cat > templates/pages/index.html <<'HTML'
         </div>
       </section>
 
+      {% if user.role == "manager" %}
       <section id="screen-drivers" class="hidden">
         <div class="card card-pad">
           <div class="h2">Conductores</div>
@@ -241,17 +251,18 @@ cat > templates/pages/index.html <<'HTML'
         </div>
       </section>
 
-      <section id="screen-docs" class="hidden">
-        <div class="card card-pad">
-          <div class="h2">Documentos</div>
-          <div class="muted">CMR, facturas, recibos…</div>
-        </div>
-      </section>
-
       <section id="screen-settings" class="hidden">
         <div class="card card-pad">
           <div class="h2">Ajustes</div>
           <div class="muted">Roles, usuarios, parámetros, etc.</div>
+        </div>
+      </section>
+      {% endif %}
+
+      <section id="screen-docs" class="hidden">
+        <div class="card card-pad">
+          <div class="h2">Documentos</div>
+          <div class="muted">CMR, facturas, recibos…</div>
         </div>
       </section>
 
@@ -260,6 +271,8 @@ cat > templates/pages/index.html <<'HTML'
 </section>
 
 <script>
+  const USER_ROLE = "{{ user.role }}";
+
   const nav = document.getElementById("nav");
   const screenTitle = document.getElementById("screenTitle");
   const screenSubtitle = document.getElementById("screenSubtitle");
@@ -272,7 +285,10 @@ cat > templates/pages/index.html <<'HTML'
   }
 
   function switchScreen(screen){
-    const screens = ["dashboard","trips","fuel","drivers","vehicles","docs","settings"];
+    const screens = (USER_ROLE === "manager")
+      ? ["dashboard","trips","fuel","drivers","vehicles","docs","settings"]
+      : ["dashboard","trips","fuel","docs"];
+
     screens.forEach(s => {
       const el = document.getElementById("screen-" + s);
       if(!el) return;
@@ -301,6 +317,12 @@ cat > templates/pages/index.html <<'HTML'
     if(!a) return;
     e.preventDefault();
     const screen = a.dataset.screen;
+
+    // Seguridad UI: driver no puede abrir pantallas de manager
+    if(USER_ROLE !== "manager" && ["drivers","vehicles","settings"].includes(screen)){
+      return;
+    }
+
     setActiveNav(screen);
     switchScreen(screen);
   });
@@ -315,6 +337,4 @@ cat > templates/pages/index.html <<'HTML'
 </script>
 
 {% endblock %}
-HTML
 
-             
