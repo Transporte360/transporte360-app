@@ -1,15 +1,11 @@
 import os
 import sqlite3
 from datetime import datetime
-
 from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, abort
 
 app = Flask(__name__)
 app.secret_key = "CAMBIA-ESTO-POR-UNA-CLAVE-LARGA-UNICA"
 
-# =========================
-# CONFIG
-# =========================
 DB_PATH = "transporte.db"
 UPLOAD_ROOT = "uploads"
 UPLOAD_CMR = os.path.join(UPLOAD_ROOT, "cmr")
@@ -21,9 +17,6 @@ USERS = {
     "driver2": {"pin": "9012", "role": "driver", "name": "Ana Martínez"},
 }
 
-# =========================
-# DB HELPERS
-# =========================
 def get_conn():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -38,17 +31,13 @@ def init_db():
       created_at TEXT NOT NULL,
       created_by TEXT NOT NULL,
       created_role TEXT NOT NULL,
-
       fecha TEXT NOT NULL,
       origen TEXT NOT NULL,
       destino TEXT NOT NULL,
-
       camion_matricula TEXT NOT NULL,
-
       km_inicio REAL NOT NULL,
       km_fin REAL NOT NULL,
       km_total REAL NOT NULL,
-
       peso_kg REAL NOT NULL DEFAULT 0,
       cmr_path TEXT
     )
@@ -81,18 +70,12 @@ def last_km_fin_for_camion(matricula: str):
     except:
         return None
 
-# =========================
-# AUTH
-# =========================
 def current_user():
     return session.get("user")
 
 def require_login():
     return bool(current_user())
 
-# =========================
-# FILES (solo logueado)
-# =========================
 @app.get("/uploads/<path:subpath>")
 def serve_upload(subpath):
     if not require_login():
@@ -104,9 +87,6 @@ def serve_upload(subpath):
     filename = os.path.basename(full)
     return send_from_directory(folder, filename, as_attachment=False)
 
-# =========================
-# LOGIN
-# =========================
 @app.get("/login")
 def login_get():
     if current_user():
@@ -134,9 +114,6 @@ def logout():
 def root():
     return redirect(url_for("dashboard"))
 
-# =========================
-# DASHBOARD (placeholder)
-# =========================
 @app.get("/dashboard")
 def dashboard():
     if not require_login():
@@ -151,9 +128,6 @@ def dashboard():
         active_page="dashboard",
     )
 
-# =========================
-# VIAJES (v1)
-# =========================
 @app.route("/viajes", methods=["GET", "POST"])
 def viajes():
     if not require_login():
@@ -161,13 +135,6 @@ def viajes():
 
     user = current_user()
     error = None
-    ok = None
-
-    # Para pintar sugerencia km_inicio si el usuario ya escribió una matrícula
-    suggested_km_inicio = None
-    matricula_query = (request.args.get("m") or "").strip().upper()
-    if matricula_query:
-        suggested_km_inicio = last_km_fin_for_camion(matricula_query)
 
     if request.method == "POST":
         fecha = (request.form.get("fecha") or "").strip()
@@ -179,7 +146,6 @@ def viajes():
         km_fin_raw = (request.form.get("km_fin") or "").strip()
         peso_raw = (request.form.get("peso_kg") or "0").strip()
 
-        # Auto km_inicio si viene vacío
         km_inicio = None
         if km_inicio_raw:
             try:
@@ -190,7 +156,6 @@ def viajes():
             last = last_km_fin_for_camion(camion)
             km_inicio = last if last is not None else 0.0
 
-        # km_fin obligatorio
         try:
             km_fin = float(km_fin_raw)
         except:
@@ -201,7 +166,6 @@ def viajes():
         except:
             peso_kg = 0.0
 
-        # CMR (opcional, pero tú lo quieres -> lo haremos obligatorio en v2 si quieres)
         cmr_path = None
         f = request.files.get("cmr_file")
         if f and f.filename:
@@ -212,7 +176,6 @@ def viajes():
             f.save(full)
             cmr_path = os.path.join("cmr", saved)
 
-        # Validaciones
         if not (fecha and origen and destino and camion):
             error = "Faltan campos: fecha, origen, destino y matrícula."
         elif km_fin is None:
@@ -221,7 +184,6 @@ def viajes():
             error = "KM fin no puede ser menor que KM inicio."
         else:
             km_total = km_fin - km_inicio
-
             conn = get_conn()
             cur = conn.cursor()
             cur.execute("""
@@ -242,27 +204,14 @@ def viajes():
             ))
             conn.commit()
             conn.close()
-
             return redirect(url_for("viajes"))
 
-    # Listado
     conn = get_conn()
     cur = conn.cursor()
-
     if user["role"] == "driver":
-        cur.execute("""
-          SELECT * FROM viajes
-          WHERE created_by = ?
-          ORDER BY id DESC
-          LIMIT 200
-        """, (user["username"],))
+        cur.execute("SELECT * FROM viajes WHERE created_by=? ORDER BY id DESC LIMIT 200", (user["username"],))
     else:
-        cur.execute("""
-          SELECT * FROM viajes
-          ORDER BY id DESC
-          LIMIT 200
-        """)
-
+        cur.execute("SELECT * FROM viajes ORDER BY id DESC LIMIT 200")
     rows = cur.fetchall()
     conn.close()
 
@@ -275,57 +224,22 @@ def viajes():
         active_page="viajes",
         rows=rows,
         error=error,
-        ok=ok,
-        suggested_km_inicio=suggested_km_inicio,
-        matricula_query=matricula_query,
     )
 
-# =========================
-# PLACEHOLDERS (luego)
-# =========================
+# placeholders para que no rompa el menú (luego los hacemos)
 @app.get("/repostajes")
 def repostajes():
     if not require_login():
         return redirect(url_for("login_get"))
     user = current_user()
-    return render_template(
-        "pages/repostajes.html",
-        user=user,
-        title="Repostajes - Transporte360",
-        page_title="Repostajes",
-        page_subtitle="Registro de gasoil",
-        active_page="repostajes",
-    )
+    return render_template("pages/dashboard.html", user=user, title="Repostajes", page_title="Repostajes", page_subtitle="En construcción", active_page="repostajes")
 
 @app.get("/tacografo")
 def tacografo():
     if not require_login():
         return redirect(url_for("login_get"))
     user = current_user()
-    return render_template(
-        "pages/tacografo.html",
-        user=user,
-        title="Tacógrafo - Transporte360",
-        page_title="Tacógrafo",
-        page_subtitle="Horas manuales",
-        active_page="tacografo",
-    )
-
-@app.get("/conductores")
-def conductores():
-    if not require_login():
-        return redirect(url_for("login_get"))
-    user = current_user()
-    if user["role"] != "manager":
-        return ("Forbidden", 403)
-    return render_template(
-        "pages/conductores.html",
-        user=user,
-        title="Conductores - Transporte360",
-        page_title="Conductores",
-        page_subtitle="Alta y gestión",
-        active_page="conductores",
-    )
+    return render_template("pages/dashboard.html", user=user, title="Tacógrafo", page_title="Tacógrafo", page_subtitle="En construcción", active_page="tacografo")
 
 @app.get("/camiones")
 def camiones():
@@ -334,14 +248,16 @@ def camiones():
     user = current_user()
     if user["role"] != "manager":
         return ("Forbidden", 403)
-    return render_template(
-        "pages/camiones.html",
-        user=user,
-        title="Camiones - Transporte360",
-        page_title="Camiones",
-        page_subtitle="Alta de vehículos",
-        active_page="camiones",
-    )
+    return render_template("pages/dashboard.html", user=user, title="Camiones", page_title="Camiones", page_subtitle="En construcción", active_page="camiones")
+
+@app.get("/conductores")
+def conductores():
+    if not require_login():
+        return redirect(url_for("login_get"))
+    user = current_user()
+    if user["role"] != "manager":
+        return ("Forbidden", 403)
+    return render_template("pages/dashboard.html", user=user, title="Conductores", page_title="Conductores", page_subtitle="En construcción", active_page="conductores")
 
 @app.get("/ajustes")
 def ajustes():
@@ -350,14 +266,7 @@ def ajustes():
     user = current_user()
     if user["role"] != "manager":
         return ("Forbidden", 403)
-    return render_template(
-        "pages/ajustes.html",
-        user=user,
-        title="Ajustes - Transporte360",
-        page_title="Ajustes",
-        page_subtitle="Parámetros del sistema",
-        active_page="ajustes",
-    )
+    return render_template("pages/dashboard.html", user=user, title="Ajustes", page_title="Ajustes", page_subtitle="En construcción", active_page="ajustes")
 
 if __name__ == "__main__":
     init_db()
