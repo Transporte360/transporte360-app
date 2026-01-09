@@ -2,11 +2,70 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>{{ title or "Transporte360 - TMS" }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title or "Transporte360" }}</title>
+
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
 </head>
-<body class="{% block body_class %}{% endblock %}">
-  {% block content %}{% endblock %}
+
+<body class="{{ body_class or '' }}">
+  {# Si quieres ocultar el layout (sidebar) en login, usamos hide_layout #}
+
+  {% if not hide_layout %}
+    <div class="app-shell">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">
+            <img src="{{ url_for('static', filename='img/logo-transporte360.svg') }}" alt="Transporte360" style="width:24px;height:24px;">
+          </div>
+          <div class="col" style="gap:4px">
+            <div style="font-weight:900; font-size:16px; line-height:1">Transporte360</div>
+            <div class="badge">TMS · Operaciones</div>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="tiny" style="color:rgba(255,255,255,.72); padding:0 6px">
+          Usuario: <span style="color:#fff; font-weight:900">{{ user.name if user else "—" }}</span><br/>
+          Rol: <span style="color:#fff; font-weight:900">{{ user.role if user else "—" }}</span>
+        </div>
+
+        <nav class="nav" style="margin-top:14px">
+          <a href="{{ url_for('dashboard') }}" class="{{ 'active' if active_page=='dashboard' else '' }}">📊 Dashboard</a>
+          <a href="{{ url_for('viajes') }}" class="{{ 'active' if active_page=='viajes' else '' }}">🧾 Viajes</a>
+          <a href="{{ url_for('repostajes') }}" class="{{ 'active' if active_page=='repostajes' else '' }}">⛽ Repostajes</a>
+          <a href="{{ url_for('tacografo') }}" class="{{ 'active' if active_page=='tacografo' else '' }}">⏱️ Tacógrafo</a>
+
+          {% if user and user.role == 'manager' %}
+            <div style="height:10px"></div>
+            <a href="{{ url_for('conductores') }}" class="{{ 'active' if active_page=='conductores' else '' }}">👷 Conductores</a>
+            <a href="{{ url_for('camiones') }}" class="{{ 'active' if active_page=='camiones' else '' }}">🚚 Camiones</a>
+            <a href="{{ url_for('ajustes') }}" class="{{ 'active' if active_page=='ajustes' else '' }}">⚙️ Ajustes</a>
+          {% endif %}
+
+          <div style="height:10px"></div>
+          <a href="{{ url_for('logout') }}">🚪 Salir</a>
+        </nav>
+      </aside>
+
+      <!-- Main -->
+      <main class="content">
+        <div class="topbar">
+          <div class="col" style="gap:2px">
+            <div class="h1">{{ page_title or title or "Panel" }}</div>
+            <div class="muted">{{ page_subtitle or "" }}</div>
+          </div>
+        </div>
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+
+  {% else %}
+    {% block content %}{% endblock %}
+  {% endif %}
 </body>
 </html>
+
