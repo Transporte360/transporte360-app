@@ -6,7 +6,7 @@
   <title>{{ title or "Transporte360 - TMS" }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
   {% block content %}{% endblock %}
 </body>
 </html>
