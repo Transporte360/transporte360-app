@@ -1,8 +1,10 @@
 {% extends "layouts/base.html" %}
 {% set title = "Iniciar Sesión - Transporte360" %}
 
+{# Esto pone class="login-v2" en el <body> desde base.html #}
+{% block body_class %}login-v2{% endblock %}
+
 {% block content %}
-<body class="login-v2">
   <!-- Background grid -->
   <div class="login-bg-grid" aria-hidden="true">
     <svg class="login-bg-svg" xmlns="http://www.w3.org/2000/svg">
@@ -182,5 +184,5 @@
       spinner.classList.remove("hidden");
     });
   </script>
-</body>
 {% endblock %}
+
