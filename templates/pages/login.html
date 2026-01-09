@@ -1,8 +1,7 @@
 {% extends "layouts/base.html" %}
 {% set title = "Iniciar Sesión - Transporte360" %}
-
-{# Esto pone class="login-v2" en el <body> desde base.html #}
-{% block body_class %}login-v2{% endblock %}
+{% set hide_layout = True %}
+{% set body_class = "login-v2" %}
 
 {% block content %}
   <!-- Background grid -->
@@ -56,7 +55,6 @@
             </label>
             <div class="login-input-wrap-v2">
               <span class="login-input-ic-v2" aria-hidden="true">
-                <!-- user icon -->
                 <svg viewBox="0 0 24 24" fill="none">
                   <path d="M20 21a8 8 0 10-16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                   <path d="M12 13a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -81,7 +79,6 @@
             </label>
             <div class="login-input-wrap-v2">
               <span class="login-input-ic-v2" aria-hidden="true">
-                <!-- lock icon -->
                 <svg viewBox="0 0 24 24" fill="none">
                   <path d="M7 11V8a5 5 0 0110 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                   <path d="M7 11h10a2 2 0 012 2v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6a2 2 0 012-2z" stroke="currentColor" stroke-width="2"/>
@@ -117,51 +114,33 @@
             <p class="login-hint-v2">Ingrese su PIN de 4 dígitos</p>
           </div>
 
-          <!-- Remember me (opcional, solo UI) -->
-          <div class="login-remember-v2">
-            <input type="checkbox" id="rememberMe" name="rememberMe" />
-            <label for="rememberMe">Recordar mis credenciales</label>
-          </div>
-
-          <!-- Button -->
           <button type="submit" id="loginButton" class="login-btn-v2">
             <span id="loginButtonText">Iniciar Sesión</span>
             <span id="loadingSpinner" class="login-spinner-v2 hidden" aria-hidden="true"></span>
           </button>
         </form>
 
-        <!-- Help -->
         <div class="login-help-v2">
           <div class="login-help-ic" aria-hidden="true">ℹ️</div>
           <div>
-            <p>
-              <strong>Requisitos del Sistema:</strong><br/>
-              Navegador actualizado con JavaScript habilitado
-            </p>
-            <p style="margin-top:10px">
-              <strong>¿Problemas para acceder?</strong><br/>
-              Contacte al administrador del sistema para asistencia
-            </p>
+            <p><strong>Requisitos del Sistema:</strong><br/>Navegador actualizado con JavaScript habilitado</p>
+            <p style="margin-top:10px"><strong>¿Problemas para acceder?</strong><br/>Contacte al administrador del sistema</p>
           </div>
         </div>
       </section>
 
-      <!-- Footer -->
       <footer class="login-footer-v2">
         © 2026 Transporte360. Todos los derechos reservados.
       </footer>
-
     </div>
   </main>
 
   <script>
-    // PIN: solo números
     const pin = document.getElementById("pin");
     pin?.addEventListener("input", (e) => {
       e.target.value = e.target.value.replace(/[^0-9]/g, "");
     });
 
-    // Toggle PIN
     const toggle = document.getElementById("togglePin");
     const eyeOpen = document.getElementById("eyeOpen");
     const eyeOff = document.getElementById("eyeOff");
@@ -172,7 +151,6 @@
       eyeOff.classList.toggle("hidden", !isHidden);
     });
 
-    // Loading state (mejora UX)
     const form = document.getElementById("loginForm");
     const btn = document.getElementById("loginButton");
     const btnText = document.getElementById("loginButtonText");
@@ -185,4 +163,3 @@
     });
   </script>
 {% endblock %}
-
