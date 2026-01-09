@@ -1,7 +1,19 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+import os
+import sqlite3
+from datetime import datetime
+
+from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, abort
 
 app = Flask(__name__)
 app.secret_key = "CAMBIA-ESTO-POR-UNA-CLAVE-LARGA-UNICA"
+
+# =========================
+# CONFIG
+# =========================
+DB_PATH = "transporte.db"
+UPLOAD_ROOT = "uploads"
+UPLOAD_CMR = os.path.join(UPLOAD_ROOT, "cmr")
+os.makedirs(UPLOAD_CMR, exist_ok=True)
 
 USERS = {
     "manager": {"pin": "1234", "role": "manager", "name": "Carlos Rodríguez"},
@@ -9,14 +21,92 @@ USERS = {
     "driver2": {"pin": "9012", "role": "driver", "name": "Ana Martínez"},
 }
 
+# =========================
+# DB HELPERS
+# =========================
+def get_conn():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS viajes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at TEXT NOT NULL,
+      created_by TEXT NOT NULL,
+      created_role TEXT NOT NULL,
+
+      fecha TEXT NOT NULL,
+      origen TEXT NOT NULL,
+      destino TEXT NOT NULL,
+
+      camion_matricula TEXT NOT NULL,
+
+      km_inicio REAL NOT NULL,
+      km_fin REAL NOT NULL,
+      km_total REAL NOT NULL,
+
+      peso_kg REAL NOT NULL DEFAULT 0,
+      cmr_path TEXT
+    )
+    """)
+    conn.commit()
+    conn.close()
+
+def safe_filename(name: str) -> str:
+    name = (name or "").replace("\\", "_").replace("/", "_")
+    clean = "".join([c for c in name if c.isalnum() or c in "._-"]).strip("._-")
+    return clean or "file"
+
+def last_km_fin_for_camion(matricula: str):
+    if not matricula:
+        return None
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("""
+      SELECT km_fin FROM viajes
+      WHERE camion_matricula = ?
+      ORDER BY id DESC
+      LIMIT 1
+    """, (matricula.strip().upper(),))
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return None
+    try:
+        return float(row["km_fin"])
+    except:
+        return None
+
+# =========================
+# AUTH
+# =========================
 def current_user():
     return session.get("user")
 
-def login_required():
-    if not current_user():
-        return False
-    return True
+def require_login():
+    return bool(current_user())
 
+# =========================
+# FILES (solo logueado)
+# =========================
+@app.get("/uploads/<path:subpath>")
+def serve_upload(subpath):
+    if not require_login():
+        return redirect(url_for("login_get"))
+    full = os.path.normpath(os.path.join(UPLOAD_ROOT, subpath))
+    if not os.path.abspath(full).startswith(os.path.abspath(UPLOAD_ROOT)):
+        abort(403)
+    folder = os.path.dirname(full)
+    filename = os.path.basename(full)
+    return send_from_directory(folder, filename, as_attachment=False)
+
+# =========================
+# LOGIN
+# =========================
 @app.get("/login")
 def login_get():
     if current_user():
@@ -44,9 +134,12 @@ def logout():
 def root():
     return redirect(url_for("dashboard"))
 
+# =========================
+# DASHBOARD (placeholder)
+# =========================
 @app.get("/dashboard")
 def dashboard():
-    if not login_required():
+    if not require_login():
         return redirect(url_for("login_get"))
     user = current_user()
     return render_template(
@@ -58,23 +151,141 @@ def dashboard():
         active_page="dashboard",
     )
 
-@app.get("/viajes")
+# =========================
+# VIAJES (v1)
+# =========================
+@app.route("/viajes", methods=["GET", "POST"])
 def viajes():
-    if not login_required():
+    if not require_login():
         return redirect(url_for("login_get"))
+
     user = current_user()
+    error = None
+    ok = None
+
+    # Para pintar sugerencia km_inicio si el usuario ya escribió una matrícula
+    suggested_km_inicio = None
+    matricula_query = (request.args.get("m") or "").strip().upper()
+    if matricula_query:
+        suggested_km_inicio = last_km_fin_for_camion(matricula_query)
+
+    if request.method == "POST":
+        fecha = (request.form.get("fecha") or "").strip()
+        origen = (request.form.get("origen") or "").strip()
+        destino = (request.form.get("destino") or "").strip()
+        camion = (request.form.get("camion_matricula") or "").strip().upper()
+
+        km_inicio_raw = (request.form.get("km_inicio") or "").strip()
+        km_fin_raw = (request.form.get("km_fin") or "").strip()
+        peso_raw = (request.form.get("peso_kg") or "0").strip()
+
+        # Auto km_inicio si viene vacío
+        km_inicio = None
+        if km_inicio_raw:
+            try:
+                km_inicio = float(km_inicio_raw)
+            except:
+                km_inicio = None
+        if km_inicio is None:
+            last = last_km_fin_for_camion(camion)
+            km_inicio = last if last is not None else 0.0
+
+        # km_fin obligatorio
+        try:
+            km_fin = float(km_fin_raw)
+        except:
+            km_fin = None
+
+        try:
+            peso_kg = float(peso_raw or 0)
+        except:
+            peso_kg = 0.0
+
+        # CMR (opcional, pero tú lo quieres -> lo haremos obligatorio en v2 si quieres)
+        cmr_path = None
+        f = request.files.get("cmr_file")
+        if f and f.filename:
+            fname = safe_filename(f.filename)
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            saved = f"{stamp}_{fname}"
+            full = os.path.join(UPLOAD_CMR, saved)
+            f.save(full)
+            cmr_path = os.path.join("cmr", saved)
+
+        # Validaciones
+        if not (fecha and origen and destino and camion):
+            error = "Faltan campos: fecha, origen, destino y matrícula."
+        elif km_fin is None:
+            error = "KM fin es obligatorio y debe ser un número."
+        elif km_fin < km_inicio:
+            error = "KM fin no puede ser menor que KM inicio."
+        else:
+            km_total = km_fin - km_inicio
+
+            conn = get_conn()
+            cur = conn.cursor()
+            cur.execute("""
+              INSERT INTO viajes (
+                created_at, created_by, created_role,
+                fecha, origen, destino,
+                camion_matricula,
+                km_inicio, km_fin, km_total,
+                peso_kg, cmr_path
+              ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            """, (
+                datetime.now().isoformat(timespec="seconds"),
+                user["username"], user["role"],
+                fecha, origen, destino,
+                camion,
+                km_inicio, km_fin, km_total,
+                peso_kg, cmr_path
+            ))
+            conn.commit()
+            conn.close()
+
+            return redirect(url_for("viajes"))
+
+    # Listado
+    conn = get_conn()
+    cur = conn.cursor()
+
+    if user["role"] == "driver":
+        cur.execute("""
+          SELECT * FROM viajes
+          WHERE created_by = ?
+          ORDER BY id DESC
+          LIMIT 200
+        """, (user["username"],))
+    else:
+        cur.execute("""
+          SELECT * FROM viajes
+          ORDER BY id DESC
+          LIMIT 200
+        """)
+
+    rows = cur.fetchall()
+    conn.close()
+
     return render_template(
         "pages/viajes.html",
         user=user,
         title="Viajes - Transporte360",
         page_title="Viajes",
-        page_subtitle="Registro operativo",
+        page_subtitle="Registro operativo (odómetro + CMR)",
         active_page="viajes",
+        rows=rows,
+        error=error,
+        ok=ok,
+        suggested_km_inicio=suggested_km_inicio,
+        matricula_query=matricula_query,
     )
 
+# =========================
+# PLACEHOLDERS (luego)
+# =========================
 @app.get("/repostajes")
 def repostajes():
-    if not login_required():
+    if not require_login():
         return redirect(url_for("login_get"))
     user = current_user()
     return render_template(
@@ -88,7 +299,7 @@ def repostajes():
 
 @app.get("/tacografo")
 def tacografo():
-    if not login_required():
+    if not require_login():
         return redirect(url_for("login_get"))
     user = current_user()
     return render_template(
@@ -100,10 +311,9 @@ def tacografo():
         active_page="tacografo",
     )
 
-# Rutas manager (por ahora placeholders)
 @app.get("/conductores")
 def conductores():
-    if not login_required():
+    if not require_login():
         return redirect(url_for("login_get"))
     user = current_user()
     if user["role"] != "manager":
@@ -119,7 +329,7 @@ def conductores():
 
 @app.get("/camiones")
 def camiones():
-    if not login_required():
+    if not require_login():
         return redirect(url_for("login_get"))
     user = current_user()
     if user["role"] != "manager":
@@ -135,7 +345,7 @@ def camiones():
 
 @app.get("/ajustes")
 def ajustes():
-    if not login_required():
+    if not require_login():
         return redirect(url_for("login_get"))
     user = current_user()
     if user["role"] != "manager":
@@ -150,5 +360,7 @@ def ajustes():
     )
 
 if __name__ == "__main__":
+    init_db()
     app.run(host="127.0.0.1", port=5000, debug=True)
+
 
