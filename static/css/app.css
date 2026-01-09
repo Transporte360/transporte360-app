@@ -138,11 +138,12 @@
       background: rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.08);
     }
-    .logo{
-      width:44px; height:44px; border-radius:14px;
-      background: #0b2545;
-      display:grid; place-items:center;
-      box-shadow: 0 10px 20px rgba(0,0,0,.22);
+    .sidebar .logo{
+  width:44px; height:44px; border-radius:14px;
+  background:#0b2545;
+  display:grid; place-items:center;
+  box-shadow:0 10px 20px rgba(0,0,0,.22);
+}
     }
     .badge{
       display:inline-flex; align-items:center; gap:8px;
