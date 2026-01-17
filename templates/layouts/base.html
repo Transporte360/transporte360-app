@@ -1,415 +1,106 @@
+<!doctype html>
 <html lang="es">
-
 <head>
-
   <meta charset="utf-8" />
-
-
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-
   <title>{{ title or "Transporte360" }}</title>
-
-
-
-
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
-
 </head>
 
-
-
-
 <body class="{{ body_class or '' }}">
+  {# Si hide_layout=True (login), no mostramos sidebar/topbar #}
 
-
-  {# Si quieres ocultar el layout (sidebar) en login, usamos hide_layout #}
-
-
-<body>
-
-
-  <div class="app-shell">
-
-
-
-
-  {% if not hide_layout %}
-
-
+  {% if hide_layout %}
+    {% block content %}{% endblock %}
+  {% else %}
     <div class="app-shell">
 
-
       <!-- Sidebar -->
-
-
       <aside class="sidebar">
-
-
         <div class="brand">
-
-
           <div class="logo" aria-hidden="true">
-
-
-            <img src="{{ url_for('static', filename='img/logo-transporte360.svg') }}" alt="Transporte360" style="width:24px;height:24px;">
-
-
+            <img src="{{ url_for('static', filename='img/logo-transporte360.svg') }}"
+                 alt="Transporte360" style="width:22px;height:22px;">
           </div>
-
-
           <div class="col" style="gap:4px">
-
-
             <div style="font-weight:900; font-size:16px; line-height:1">Transporte360</div>
-
-
             <div class="badge">TMS · Operaciones</div>
-
-
           </div>
-
-
-    <!-- Sidebar -->
-
-
-    <aside class="sidebar">
-
-
-      <div class="brand">
-
-
-        <div class="logo" aria-hidden="true">
-
-
-          <img src="{{ url_for('static', filename='img/logo-transporte360.svg') }}" alt="Logo" style="width:22px;height:22px">
-
-
         </div>
-
-
-        <div class="col" style="gap:4px">
-
-
-          <div style="font-weight:900; font-size:16px; line-height:1">Transporte360</div>
-
-
-          <div class="badge">TMS · Operaciones</div>
-
-        </div>
-
-
-      </div>
-
-
-
-
-
-      <div style="height:12px"></div>
-
-
-
-
-
-      {% if user %}
-
-
-      <div class="tiny" style="color:rgba(255,255,255,.72); padding:0 6px">
-
-
-        Usuario: <span style="color:#fff; font-weight:900">{{ user.name }}</span><br/>
-
-
-        Rol: <span style="color:#fff; font-weight:900">{{ user.role }}</span>
-
-
-      </div>
-
-
-      {% endif %}
-
-
-
-
-
-      <div class="nav" style="margin-top:14px">
-
-
-        <a href="{{ url_for('dashboard') }}" class="{% if active_page=='dashboard' %}active{% endif %}">
-
-
-          <span class="nav-ic">📊</span> Dashboard
-
-
-        </a>
-
-
-
-
-
-        <a href="{{ url_for('viajes') }}" class="{% if active_page=='viajes' %}active{% endif %}">
-
-
-          <span class="nav-ic">🧾</span> Viajes
-
-
-        </a>
-
-
-
-
-
-        <a href="{{ url_for('repostajes') }}" class="{% if active_page=='repostajes' %}active{% endif %}">
-
-
-          <span class="nav-ic">⛽</span> Repostajes
-
-
-        </a>
-
-
-
-
-
-        <a href="{{ url_for('tacografo') }}" class="{% if active_page=='tacografo' %}active{% endif %}">
-
-
-          <span class="nav-ic">⏱️</span> Tacógrafo
-
-
-        </a>
-
-
-
-
-
-        {% if user and user.role == 'manager' %}
-
-
-        <div style="height:10px"></div>
-
-
-
-
-
-        <a href="{{ url_for('camiones') }}" class="{% if active_page=='camiones' %}active{% endif %}">
-
-
-          <span class="nav-ic">🚚</span> Camiones
-
-
-        </a>
-
-
-
-
-
-        <a href="{{ url_for('conductores') }}" class="{% if active_page=='conductores' %}active{% endif %}">
-
-
-          <span class="nav-ic">👷</span> Conductores
-
-
-        </a>
-
-
-
-
-
-        <a href="{{ url_for('ajustes') }}" class="{% if active_page=='ajustes' %}active{% endif %}">
-
-
-          <span class="nav-ic">⚙️</span> Ajustes
-
-
-        </a>
-
-
-        {% endif %}
-
-
-
-
-
-        <div style="height:10px"></div>
-
-
-
 
         <div style="height:12px"></div>
 
+        {% if user %}
+          <div class="tiny" style="color:rgba(255,255,255,.72); padding:0 6px">
+            Usuario: <span style="color:#fff; font-weight:900">{{ user.username or user.name or "—" }}</span><br/>
+            Rol: <span style="color:#fff; font-weight:900">{{ user.role or "—" }}</span>
+          </div>
+        {% endif %}
 
-        <a href="{{ url_for('logout') }}">
+        <div class="nav" style="margin-top:14px">
+          <a href="{{ url_for('dashboard') }}" class="{% if active_page=='dashboard' %}active{% endif %}">
+            <span class="nav-ic">📊</span> Dashboard
+          </a>
 
+          <a href="{{ url_for('viajes') }}" class="{% if active_page=='viajes' %}active{% endif %}">
+            <span class="nav-ic">🧾</span> Viajes
+          </a>
 
-          <span class="nav-ic">🚪</span> Salir
+          <a href="{{ url_for('repostajes') }}" class="{% if active_page=='repostajes' %}active{% endif %}">
+            <span class="nav-ic">⛽</span> Repostajes
+          </a>
 
-
-        </a>
-
-
-      </div>
-
-
-    </aside>
-
-
-
-
-        <div class="tiny" style="color:rgba(255,255,255,.72); padding:0 6px">
-
-
-          Usuario: <span style="color:#fff; font-weight:900">{{ user.name if user else "—" }}</span><br/>
-
-
-          Rol: <span style="color:#fff; font-weight:900">{{ user.role if user else "—" }}</span>
-
-
-    <!-- Main -->
-
-
-    <main class="content">
-
-
-      <div class="topbar">
-
-
-        <div class="col" style="gap:2px">
-
-
-          <div class="h1">{{ page_title or "Panel" }}</div>
-
-
-          <div class="muted">{{ page_subtitle or "Transporte360 — Operaciones" }}</div>
-
-        </div>
-
-
-
-
-        <nav class="nav" style="margin-top:14px">
-
-
-          <a href="{{ url_for('dashboard') }}" class="{{ 'active' if active_page=='dashboard' else '' }}">📊 Dashboard</a>
-
-
-          <a href="{{ url_for('viajes') }}" class="{{ 'active' if active_page=='viajes' else '' }}">🧾 Viajes</a>
-
-
-          <a href="{{ url_for('repostajes') }}" class="{{ 'active' if active_page=='repostajes' else '' }}">⛽ Repostajes</a>
-
-
-          <a href="{{ url_for('tacografo') }}" class="{{ 'active' if active_page=='tacografo' else '' }}">⏱️ Tacógrafo</a>
-
-
-
-
+          <a href="{{ url_for('tacografo') }}" class="{% if active_page=='tacografo' %}active{% endif %}">
+            <span class="nav-ic">⏱️</span> Tacógrafo
+          </a>
 
           {% if user and user.role == 'manager' %}
-
-
             <div style="height:10px"></div>
 
+            <a href="{{ url_for('camiones') }}" class="{% if active_page=='camiones' %}active{% endif %}">
+              <span class="nav-ic">🚚</span> Camiones
+            </a>
 
-            <a href="{{ url_for('conductores') }}" class="{{ 'active' if active_page=='conductores' else '' }}">👷 Conductores</a>
+            <a href="{{ url_for('conductores') }}" class="{% if active_page=='conductores' %}active{% endif %}">
+              <span class="nav-ic">👷</span> Conductores
+            </a>
 
-
-            <a href="{{ url_for('camiones') }}" class="{{ 'active' if active_page=='camiones' else '' }}">🚚 Camiones</a>
-
-
-            <a href="{{ url_for('ajustes') }}" class="{{ 'active' if active_page=='ajustes' else '' }}">⚙️ Ajustes</a>
-
-
+            <a href="{{ url_for('ajustes') }}" class="{% if active_page=='ajustes' %}active{% endif %}">
+              <span class="nav-ic">⚙️</span> Ajustes
+            </a>
           {% endif %}
-
-
-
-
 
           <div style="height:10px"></div>
 
-
-          <a href="{{ url_for('logout') }}">🚪 Salir</a>
-
-
-        </nav>
-
-
+          <a href="{{ url_for('logout') }}">
+            <span class="nav-ic">🚪</span> Salir
+          </a>
+        </div>
       </aside>
 
-
-
-
-
       <!-- Main -->
-
-
       <main class="content">
-
-
         <div class="topbar">
-
-
           <div class="col" style="gap:2px">
-
-
             <div class="h1">{{ page_title or title or "Panel" }}</div>
-
-
             <div class="muted">{{ page_subtitle or "" }}</div>
-
-
-        <div class="right">
-
-
-          <div class="pill">
-
-
-            <span class="tiny">Estado:</span>
-
-
-            <span class="chip up">Operativo</span>
-
           </div>
 
+          <div class="right">
+            <div class="pill">
+              <span class="tiny">Estado:</span>
+              <span class="chip up">Operativo</span>
+            </div>
+          </div>
         </div>
 
-
-      </div>
-
-
-
-
         {% block content %}{% endblock %}
-
-
       </main>
 
-
     </div>
-
-
-      {% block content %}{% endblock %}
-
-
-    </main>
-
-
-
-
-  {% else %}
-
-
-    {% block content %}{% endblock %}
-
-
   {% endif %}
-
-
-  </div>
-
 </body>
+</html>
+
 
 
