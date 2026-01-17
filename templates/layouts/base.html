@@ -1,329 +1,415 @@
-BASE_HTML = """
-<!doctype html>
 <html lang="es">
+
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>{{title}}</title>
-<style>
-  :root{
-    --bg0:#f6f7fb;
-    --bg1:#ffffff;
 
-    --text:#0b1220;
-    --muted:#55657a;
-    --line:#e6edf6;
+  <meta charset="utf-8" />
 
-    --shadow: 0 16px 40px rgba(10,20,40,.10);
-    --shadow2: 0 10px 24px rgba(10,20,40,.08);
-    --r:20px;
 
-    /* 🎯 Colores T360 (Navy + Naranja) */
-    --pri:#1E3A5F;        /* navy */
-    --pri2:#274a78;       /* navy 2 */
-    --acc:#E67E22;        /* naranja */
-    --acc2:#F09A4A;       /* naranja 2 */
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    --ok:#16a34a;
-    --warn:#f59e0b;
-    --bad:#dc2626;
-  }
 
-  *{box-sizing:border-box}
-  body{
-    margin:0;
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
-    color:var(--text);
-    background:
-      radial-gradient(1000px 520px at 10% 8%, rgba(230,126,34,.18), transparent 60%),
-      radial-gradient(900px 520px at 92% 0%, rgba(30,58,95,.18), transparent 55%),
-      linear-gradient(180deg, #f8fafc 0%, var(--bg0) 38%, var(--bg0) 100%);
-    min-height:100vh;
-  }
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-  .wrap{max-width:1180px; margin:0 auto; padding:18px 16px 28px;}
+  <title>{{ title or "Transporte360" }}</title>
 
-  .topbar{
-    background:rgba(255,255,255,.78);
-    border:1px solid var(--line);
-    backdrop-filter: blur(10px);
-    border-radius: 24px;
-    padding:12px 14px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    box-shadow: var(--shadow2);
-    position: sticky;
-    top: 12px;
-    z-index: 10;
-  }
 
-  .brand{display:flex; align-items:center; gap:10px; min-width: 200px;}
-  .brand-dot{
-    width:40px; height:40px; border-radius:14px;
-    background: linear-gradient(135deg, var(--pri) 0%, var(--acc) 100%);
-    box-shadow: 0 12px 28px rgba(30,58,95,.18);
-  }
-  .brand-title{font-weight:950; letter-spacing:-0.02em}
-  .brand-sub{font-size:12px; color:var(--muted); margin-top:1px}
 
-  .nav{display:flex; gap:8px; flex-wrap:wrap; justify-content:center}
-  .nav-link{
-    padding:8px 11px;
-    border-radius: 999px;
-    text-decoration:none;
-    color: #122033;
-    border: 1px solid transparent;
-    font-weight: 800;
-    font-size: 13px;
-  }
-  .nav-link:hover{
-    background: rgba(30,58,95,.06);
-    border-color: rgba(30,58,95,.14);
-  }
-  .nav-active{
-    background: rgba(230,126,34,.14);
-    border-color: rgba(230,126,34,.26);
-    color: #8a4b10;
-  }
 
-  .userbox{display:flex; align-items:center; gap:10px; justify-content:flex-end; min-width: 220px;}
-  .userpill{
-    font-size: 13px;
-    font-weight: 900;
-    padding: 8px 12px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.88);
-    border-radius: 999px;
-  }
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
 
-  .pagehead{margin:18px 2px 12px;}
-  .h1{font-size:26px; font-weight: 980; letter-spacing:-0.03em;}
-  .sub{color:var(--muted); margin-top:4px;}
-
-  .grid{display:grid; gap:12px;}
-  .kpi-grid{grid-template-columns: repeat(12, 1fr);}
-  .col-3{grid-column: span 3;}
-  .col-4{grid-column: span 4;}
-  .col-5{grid-column: span 5;}
-  .col-6{grid-column: span 6;}
-  .col-7{grid-column: span 7;}
-  .col-8{grid-column: span 8;}
-  .col-12{grid-column: span 12;}
-  @media (max-width: 980px){
-    .col-3,.col-4,.col-5,.col-6,.col-7,.col-8,.col-12{grid-column: span 12;}
-    .topbar{position: static;}
-    .brand{min-width:unset}
-    .userbox{min-width:unset}
-  }
-
-  .card{
-    background: rgba(255,255,255,.92);
-    border: 1px solid var(--line);
-    border-radius: var(--r);
-    box-shadow: var(--shadow);
-    padding: 14px;
-  }
-  .card h3{margin:0 0 8px; font-size:14px; color:#0b1220; letter-spacing:-0.01em}
-  .muted{color:var(--muted)}
-  .pill{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    padding: 6px 10px;
-    border-radius: 999px;
-    border:1px solid var(--line);
-    background: rgba(255,255,255,.92);
-    font-size: 12px;
-    font-weight: 900;
-  }
-  .pill.ok{color: var(--ok); border-color: rgba(22,163,74,.25); background: rgba(22,163,74,.08);}
-  .pill.warn{color: #92400e; border-color: rgba(245,158,11,.30); background: rgba(245,158,11,.10);}
-  .pill.bad{color: var(--bad); border-color: rgba(220,38,38,.22); background: rgba(220,38,38,.07);}
-
-  .kpi{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:10px;
-  }
-  .kpi .label{font-size:13px; color: var(--muted); font-weight:900;}
-  .kpi .value{font-size:26px; font-weight: 980; letter-spacing:-0.03em; margin-top:4px;}
-  .kpi .note{font-size:12px; color: var(--muted); margin-top:6px;}
-  .icon{
-    width:42px; height:42px; border-radius: 14px;
-    display:flex; align-items:center; justify-content:center;
-    background: rgba(30,58,95,.08);
-    border:1px solid rgba(30,58,95,.14);
-  }
-
-  .btn{
-    display:inline-flex; align-items:center; justify-content:center;
-    gap:8px;
-    background: linear-gradient(135deg, var(--pri2) 0%, var(--pri) 100%);
-    color:#fff;
-    padding: 10px 14px;
-    border:none;
-    border-radius: 14px;
-    cursor:pointer;
-    font-weight: 950;
-    text-decoration:none;
-    box-shadow: 0 12px 26px rgba(30,58,95,.18);
-  }
-  .btn:hover{filter: brightness(0.98);}
-  .btn-ghost{
-    background: transparent;
-    border:1px solid var(--line);
-    color:#0b1220;
-    box-shadow:none;
-  }
-  .btn-ghost:hover{background: rgba(10,20,40,.03);}
-
-  input, select{
-    width:100%;
-    padding: 11px 12px;
-    border-radius: 14px;
-    border: 1px solid var(--line);
-    background: rgba(255,255,255,.98);
-    outline: none;
-    font-weight: 700;
-  }
-  input:focus, select:focus{
-    border-color: rgba(30,58,95,.35);
-    box-shadow: 0 0 0 4px rgba(30,58,95,.10);
-  }
-  label{display:block; font-weight: 950; font-size: 12px; margin: 10px 0 6px; color:#0b1220;}
-
-  table{
-    width:100%;
-    border-collapse: collapse;
-    background: rgba(255,255,255,.92);
-    border: 1px solid var(--line);
-    border-radius: var(--r);
-    overflow:hidden;
-    box-shadow: var(--shadow);
-    margin-top: 12px;
-  }
-  th, td{
-    padding: 10px 10px;
-    border-bottom: 1px solid var(--line);
-    font-size: 13px;
-    text-align:left;
-    vertical-align: top;
-  }
-  th{
-    background: rgba(30,58,95,.06);
-    color:#0b1220;
-    font-weight: 980;
-  }
-  tr:hover td{background: rgba(10,20,40,.02);}
-
-  .split{display:flex; gap:12px; flex-wrap:wrap;}
-  .split > div{flex: 1; min-width: 260px;}
-
-  /* ===== Login (tu login actual) ===== */
-  .login-shell{
-    max-width: 980px;
-    margin: 0 auto;
-    padding: 26px 16px;
-    display:flex;
-    align-items:center;
-    min-height: 100vh;
-  }
-  .login-grid{
-    display:grid;
-    grid-template-columns: 1.1fr .9fr;
-    gap: 16px;
-    width: 100%;
-  }
-  @media (max-width: 980px){
-    .login-grid{grid-template-columns: 1fr;}
-  }
-  .hero{
-    padding: 18px;
-    border-radius: 26px;
-    border: 1px solid rgba(255,255,255,.55);
-    background:
-      radial-gradient(900px 520px at 15% 10%, rgba(230,126,34,.26), transparent 55%),
-      radial-gradient(700px 420px at 85% 10%, rgba(30,58,95,.20), transparent 55%),
-      linear-gradient(135deg, rgba(255,255,255,.80), rgba(255,255,255,.60));
-    box-shadow: var(--shadow);
-    position: relative;
-    overflow:hidden;
-  }
-  .hero h1{
-    margin: 0;
-    font-size: 34px;
-    line-height: 1.05;
-    letter-spacing: -0.04em;
-    font-weight: 990;
-  }
-  .hero p{color: var(--muted); font-weight: 700; margin-top:10px; max-width: 54ch;}
-  .hero .badge{
-    display:inline-flex; align-items:center; gap:8px;
-    margin-top: 14px;
-    padding: 8px 12px;
-    border-radius: 999px;
-    border: 1px solid rgba(230,126,34,.22);
-    background: rgba(255,255,255,.78);
-    font-weight: 950;
-    color: #8a4b10;
-  }
-
-  /* donut */
-  .donut{
-    width: 120px;
-    height: 120px;
-    border-radius: 999px;
-    background: conic-gradient(var(--acc) 0 var(--p), rgba(100,116,139,.18) var(--p) 100%);
-    border: 1px solid var(--line);
-    box-shadow: 0 12px 25px rgba(15,23,42,.07);
-    position: relative;
-  }
-  .donut:after{
-    content:'';
-    position:absolute;
-    inset: 14px;
-    background: rgba(255,255,255,.96);
-    border-radius: 999px;
-    border: 1px solid var(--line);
-  }
-  .donut-center{
-    position:absolute;
-    inset: 0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight: 990;
-    z-index: 1;
-    font-size: 16px;
-    color:#0b1220;
-    flex-direction: column;
-  }
-  .donut-center span{font-size: 11px; color: var(--muted); font-weight: 900; margin-top: 2px;}
-
-  .mini{
-    font-size: 12px;
-    color: var(--muted);
-  }
-</style>
 </head>
+
+
+
+
+<body class="{{ body_class or '' }}">
+
+
+  {# Si quieres ocultar el layout (sidebar) en login, usamos hide_layout #}
+
+
 <body>
-{% if nav %}
-  <div class="wrap">
-    {{nav|safe}}
-    <div class="pagehead">
-      <div class="h1">{{title}}</div>
-      <div class="sub">{{subtitle}}</div>
+
+
+  <div class="app-shell">
+
+
+
+
+  {% if not hide_layout %}
+
+
+    <div class="app-shell">
+
+
+      <!-- Sidebar -->
+
+
+      <aside class="sidebar">
+
+
+        <div class="brand">
+
+
+          <div class="logo" aria-hidden="true">
+
+
+            <img src="{{ url_for('static', filename='img/logo-transporte360.svg') }}" alt="Transporte360" style="width:24px;height:24px;">
+
+
+          </div>
+
+
+          <div class="col" style="gap:4px">
+
+
+            <div style="font-weight:900; font-size:16px; line-height:1">Transporte360</div>
+
+
+            <div class="badge">TMS · Operaciones</div>
+
+
+          </div>
+
+
+    <!-- Sidebar -->
+
+
+    <aside class="sidebar">
+
+
+      <div class="brand">
+
+
+        <div class="logo" aria-hidden="true">
+
+
+          <img src="{{ url_for('static', filename='img/logo-transporte360.svg') }}" alt="Logo" style="width:22px;height:22px">
+
+
+        </div>
+
+
+        <div class="col" style="gap:4px">
+
+
+          <div style="font-weight:900; font-size:16px; line-height:1">Transporte360</div>
+
+
+          <div class="badge">TMS · Operaciones</div>
+
+        </div>
+
+
+      </div>
+
+
+
+
+
+      <div style="height:12px"></div>
+
+
+
+
+
+      {% if user %}
+
+
+      <div class="tiny" style="color:rgba(255,255,255,.72); padding:0 6px">
+
+
+        Usuario: <span style="color:#fff; font-weight:900">{{ user.name }}</span><br/>
+
+
+        Rol: <span style="color:#fff; font-weight:900">{{ user.role }}</span>
+
+
+      </div>
+
+
+      {% endif %}
+
+
+
+
+
+      <div class="nav" style="margin-top:14px">
+
+
+        <a href="{{ url_for('dashboard') }}" class="{% if active_page=='dashboard' %}active{% endif %}">
+
+
+          <span class="nav-ic">📊</span> Dashboard
+
+
+        </a>
+
+
+
+
+
+        <a href="{{ url_for('viajes') }}" class="{% if active_page=='viajes' %}active{% endif %}">
+
+
+          <span class="nav-ic">🧾</span> Viajes
+
+
+        </a>
+
+
+
+
+
+        <a href="{{ url_for('repostajes') }}" class="{% if active_page=='repostajes' %}active{% endif %}">
+
+
+          <span class="nav-ic">⛽</span> Repostajes
+
+
+        </a>
+
+
+
+
+
+        <a href="{{ url_for('tacografo') }}" class="{% if active_page=='tacografo' %}active{% endif %}">
+
+
+          <span class="nav-ic">⏱️</span> Tacógrafo
+
+
+        </a>
+
+
+
+
+
+        {% if user and user.role == 'manager' %}
+
+
+        <div style="height:10px"></div>
+
+
+
+
+
+        <a href="{{ url_for('camiones') }}" class="{% if active_page=='camiones' %}active{% endif %}">
+
+
+          <span class="nav-ic">🚚</span> Camiones
+
+
+        </a>
+
+
+
+
+
+        <a href="{{ url_for('conductores') }}" class="{% if active_page=='conductores' %}active{% endif %}">
+
+
+          <span class="nav-ic">👷</span> Conductores
+
+
+        </a>
+
+
+
+
+
+        <a href="{{ url_for('ajustes') }}" class="{% if active_page=='ajustes' %}active{% endif %}">
+
+
+          <span class="nav-ic">⚙️</span> Ajustes
+
+
+        </a>
+
+
+        {% endif %}
+
+
+
+
+
+        <div style="height:10px"></div>
+
+
+
+
+        <div style="height:12px"></div>
+
+
+        <a href="{{ url_for('logout') }}">
+
+
+          <span class="nav-ic">🚪</span> Salir
+
+
+        </a>
+
+
+      </div>
+
+
+    </aside>
+
+
+
+
+        <div class="tiny" style="color:rgba(255,255,255,.72); padding:0 6px">
+
+
+          Usuario: <span style="color:#fff; font-weight:900">{{ user.name if user else "—" }}</span><br/>
+
+
+          Rol: <span style="color:#fff; font-weight:900">{{ user.role if user else "—" }}</span>
+
+
+    <!-- Main -->
+
+
+    <main class="content">
+
+
+      <div class="topbar">
+
+
+        <div class="col" style="gap:2px">
+
+
+          <div class="h1">{{ page_title or "Panel" }}</div>
+
+
+          <div class="muted">{{ page_subtitle or "Transporte360 — Operaciones" }}</div>
+
+        </div>
+
+
+
+
+        <nav class="nav" style="margin-top:14px">
+
+
+          <a href="{{ url_for('dashboard') }}" class="{{ 'active' if active_page=='dashboard' else '' }}">📊 Dashboard</a>
+
+
+          <a href="{{ url_for('viajes') }}" class="{{ 'active' if active_page=='viajes' else '' }}">🧾 Viajes</a>
+
+
+          <a href="{{ url_for('repostajes') }}" class="{{ 'active' if active_page=='repostajes' else '' }}">⛽ Repostajes</a>
+
+
+          <a href="{{ url_for('tacografo') }}" class="{{ 'active' if active_page=='tacografo' else '' }}">⏱️ Tacógrafo</a>
+
+
+
+
+
+          {% if user and user.role == 'manager' %}
+
+
+            <div style="height:10px"></div>
+
+
+            <a href="{{ url_for('conductores') }}" class="{{ 'active' if active_page=='conductores' else '' }}">👷 Conductores</a>
+
+
+            <a href="{{ url_for('camiones') }}" class="{{ 'active' if active_page=='camiones' else '' }}">🚚 Camiones</a>
+
+
+            <a href="{{ url_for('ajustes') }}" class="{{ 'active' if active_page=='ajustes' else '' }}">⚙️ Ajustes</a>
+
+
+          {% endif %}
+
+
+
+
+
+          <div style="height:10px"></div>
+
+
+          <a href="{{ url_for('logout') }}">🚪 Salir</a>
+
+
+        </nav>
+
+
+      </aside>
+
+
+
+
+
+      <!-- Main -->
+
+
+      <main class="content">
+
+
+        <div class="topbar">
+
+
+          <div class="col" style="gap:2px">
+
+
+            <div class="h1">{{ page_title or title or "Panel" }}</div>
+
+
+            <div class="muted">{{ page_subtitle or "" }}</div>
+
+
+        <div class="right">
+
+
+          <div class="pill">
+
+
+            <span class="tiny">Estado:</span>
+
+
+            <span class="chip up">Operativo</span>
+
+          </div>
+
+        </div>
+
+
+      </div>
+
+
+
+
+        {% block content %}{% endblock %}
+
+
+      </main>
+
+
     </div>
-    {{content|safe}}
+
+
+      {% block content %}{% endblock %}
+
+
+    </main>
+
+
+
+
+  {% else %}
+
+
+    {% block content %}{% endblock %}
+
+
+  {% endif %}
+
+
   </div>
-{% else %}
-  {{content|safe}}
-{% endif %}
+
 </body>
-</html>
-"""
 
 
