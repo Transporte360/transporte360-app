@@ -255,7 +255,14 @@ def viajes():
 
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM viajes ORDER BY id DESC LIMIT 200")
+    cur.execute("""
+  SELECT
+    v.*,
+    (v.km_fin - v.km_inicio) AS km_total
+  FROM viajes v
+  ORDER BY v.id DESC
+  LIMIT 200
+""")
     rows = cur.fetchall()
     conn.close()
 
