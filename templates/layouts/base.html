@@ -32,7 +32,7 @@
 
         {% if user %}
           <div class="tiny" style="color:rgba(255,255,255,.72); padding:0 6px">
-            Usuario: <span style="color:#fff; font-weight:900">{{ user.username or user.name or "—" }}</span><br/>
+            Usuario: <span style="color:#fff; font-weight:900">{{ user.username or "—" }}</span><br/>
             Rol: <span style="color:#fff; font-weight:900">{{ user.role or "—" }}</span>
           </div>
         {% endif %}
@@ -101,6 +101,3 @@
   {% endif %}
 </body>
 </html>
-
-
-
