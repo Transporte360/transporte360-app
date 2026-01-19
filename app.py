@@ -286,30 +286,47 @@ def repostajes():
     u = current_user()
     error = ""
 
+    def fnum(x, default=0.0):
+        try:
+            return float(x) if x not in (None, "") else float(default)
+        except:
+            return float(default)
+
     if request.method == "POST":
         fecha = (request.form.get("fecha") or "").strip()
-
-        def fnum(x, default=0.0):
-            try:
-                return float(x) if x not in (None, "") else float(default)
-            except:
-                return float(default)
-
+        estacion = (request.form.get("estacion") or "").strip()
         litros = fnum(request.form.get("litros"), 0)
         precio_litro = fnum(request.form.get("precio_litro"), 0)
-        km_od = request.form.get("km_odometro")
-        km_od_val = fnum(km_od, None) if km_od not in (None, "") else None
-        estacion = (request.form.get("estacion") or "").strip()
+        importe = request.form.get("importe")
+        km_odometro = request.form.get("km_odometro")
 
-        if not fecha or litros <= 0 or precio_litro <= 0:
-            error = "Falta fecha o litros/precio inválidos."
+        # normaliza opcionales
+        importe_val = fnum(importe, litros * precio_litro)
+        km_odo_val = None
+        if km_odometro not in (None, ""):
+            try:
+                km_odo_val = float(km_odometro)
+            except:
+                km_odo_val = None
+
+        # validaciones
+        if not fecha:
+            error = "Falta la fecha."
+        elif litros <= 0:
+            error = "Litros debe ser mayor que 0."
+        elif precio_litro <= 0:
+            error = "Precio/L debe ser mayor que 0."
+        elif importe_val <= 0:
+            error = "Importe debe ser mayor que 0."
         else:
-            importe = litros * precio_litro
             conn = get_conn()
             cur = conn.cursor()
             cur.execute(
-                "INSERT INTO repostajes(fecha,litros,precio_litro,importe,km_odometro,estacion) VALUES(?,?,?,?,?,?)",
-                (fecha, litros, precio_litro, importe, km_od_val, estacion)
+                """
+                INSERT INTO repostajes(fecha, litros, precio_litro, importe, km_odometro, estacion)
+                VALUES(?,?,?,?,?,?)
+                """,
+                (fecha, litros, precio_litro, importe_val, km_odo_val, estacion)
             )
             conn.commit()
             conn.close()
@@ -317,7 +334,14 @@ def repostajes():
 
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM repostajes ORDER BY id DESC LIMIT 300")
+    cur.execute("""
+      SELECT
+        r.*,
+        CASE WHEN r.litros > 0 THEN (r.importe / r.litros) ELSE 0 END AS precio_calc
+      FROM repostajes r
+      ORDER BY r.id DESC
+      LIMIT 200
+    """)
     rows = cur.fetchall()
     conn.close()
 
@@ -330,7 +354,6 @@ def repostajes():
         rows=rows,
         error=error
     )
-
 
 # -------------------------
 # Tacógrafo
