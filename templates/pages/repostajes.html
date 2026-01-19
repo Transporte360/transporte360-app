@@ -1,7 +1,124 @@
 {% extends "layouts/base.html" %}
+
 {% block content %}
+
   <div class="card card-pad">
-    <div class="h2">Repostajes</div>
-    <div class="muted">Aquí meteremos el formulario + tabla (siguiente paso).</div>
+    <div class="row" style="justify-content:space-between; align-items:flex-end; gap:10px">
+      <div>
+        <div class="h2">Nuevo repostaje</div>
+        <div class="tiny">Si dejas Importe vacío, se calcula automáticamente (litros × precio/L).</div>
+      </div>
+    </div>
+
+    {% if error %}
+      <div class="alert" style="margin-top:14px">
+        <span>⚠️</span>
+        <div>
+          <div style="font-weight:900">Error</div>
+          <div class="tiny" style="color:#7f1d1d; opacity:.85">{{ error }}</div>
+        </div>
+      </div>
+    {% endif %}
+
+    <form method="post" class="grid g3" style="margin-top:14px">
+
+      <div class="field">
+        <div class="label">📅 Fecha</div>
+        <input class="input" type="date" name="fecha" required style="padding-left:12px">
+      </div>
+
+      <div class="field">
+        <div class="label">⛽ Litros</div>
+        <input class="input" type="number" step="0.01" name="litros" placeholder="Ej: 420.50" required style="padding-left:12px">
+      </div>
+
+      <div class="field">
+        <div class="label">💶 Precio/L</div>
+        <input class="input" type="number" step="0.001" name="precio_litro" placeholder="Ej: 1.389" required style="padding-left:12px">
+      </div>
+
+      <div class="field">
+        <div class="label">🧾 Importe (€)</div>
+        <input class="input" type="number" step="0.01" name="importe" placeholder="(vacío = auto)" style="padding-left:12px">
+      </div>
+
+      <div class="field">
+        <div class="label">🧾 KM odómetro</div>
+        <input class="input" type="number" step="1" name="km_odometro" placeholder="Ej: 245120" style="padding-left:12px">
+      </div>
+
+      <div class="field">
+        <div class="label">🏁 Estación</div>
+        <input class="input" name="estacion" placeholder="Ej: Repsol A-2 km 312" style="padding-left:12px">
+      </div>
+
+      <div class="field" style="grid-column: 1 / -1; display:flex; justify-content:flex-end">
+        <button class="btn btn-primary" type="submit">Guardar repostaje</button>
+      </div>
+
+    </form>
   </div>
+
+  <div style="height:14px"></div>
+
+  <div class="card card-pad">
+    <div class="row" style="justify-content:space-between; align-items:center">
+      <div class="h2">Últimos repostajes</div>
+      <div class="tiny">Máx. 200</div>
+    </div>
+
+    <div style="overflow:auto; margin-top:10px">
+      <table style="width:100%; border-collapse:collapse; background:#fff">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:10px; border-bottom:1px solid var(--border)">Fecha</th>
+            <th style="text-align:left; padding:10px; border-bottom:1px solid var(--border)">Estación</th>
+            <th style="text-align:right; padding:10px; border-bottom:1px solid var(--border)">Litros</th>
+            <th style="text-align:right; padding:10px; border-bottom:1px solid var(--border)">€/L</th>
+            <th style="text-align:right; padding:10px; border-bottom:1px solid var(--border)">Importe</th>
+            <th style="text-align:right; padding:10px; border-bottom:1px solid var(--border)">KM</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if rows and rows|length > 0 %}
+            {% for r in rows %}
+              <tr>
+                <td style="padding:10px; border-bottom:1px solid var(--border)">{{ r.fecha }}</td>
+
+                <td style="padding:10px; border-bottom:1px solid var(--border)">
+                  {% if r.estacion %}{{ r.estacion }}{% else %}<span class="muted">—</span>{% endif %}
+                </td>
+
+                <td style="padding:10px; border-bottom:1px solid var(--border); text-align:right">
+                  {{ "%.2f"|format(r.litros) }}
+                </td>
+
+                <td style="padding:10px; border-bottom:1px solid var(--border); text-align:right">
+                  {{ "%.3f"|format(r.precio_litro) }}
+                  {% if r.precio_calc %}
+                    <div class="tiny muted">calc: {{ "%.3f"|format(r.precio_calc) }}</div>
+                  {% endif %}
+                </td>
+
+                <td style="padding:10px; border-bottom:1px solid var(--border); text-align:right">
+                  <b>{{ "%.2f"|format(r.importe) }}€</b>
+                </td>
+
+                <td style="padding:10px; border-bottom:1px solid var(--border); text-align:right">
+                  {% if r.km_odometro is not none %}
+                    {{ "%.0f"|format(r.km_odometro) }}
+                  {% else %}
+                    <span class="muted">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="6" class="muted" style="padding:12px">Sin repostajes aún.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 {% endblock %}
