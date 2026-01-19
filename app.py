@@ -213,6 +213,15 @@ def dashboard():
         horas_conduccion=horas,
     )
 
+# -------------------------
+# Serve uploads (CMR / tickets)
+# -------------------------
+@app.route("/uploads/<path:subpath>")
+@login_required
+def serve_upload(subpath):
+    # Seguridad simple: evita rutas raras
+    subpath = (subpath or "").replace("..", "").lstrip("/").lstrip("\\")
+    return send_from_directory("uploads", subpath, as_attachment=False)
 
 # -------------------------
 # Viajes
