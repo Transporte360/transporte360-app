@@ -295,19 +295,45 @@ def repostajes():
     if request.method == "POST":
         fecha = (request.form.get("fecha") or "").strip()
         estacion = (request.form.get("estacion") or "").strip()
+
+        tipo = (request.form.get("tipo") or "gasoil").strip().lower()
+        if tipo not in ("gasoil", "adblue"):
+            tipo = "gasoil"
+
+        conductor_id_raw = (request.form.get("conductor_id") or "").strip()
+        conductor_id = None
+        if conductor_id_raw:
+            try:
+                conductor_id = int(conductor_id_raw)
+            except:
+                conductor_id = None
+
         litros = fnum(request.form.get("litros"), 0)
         precio_litro = fnum(request.form.get("precio_litro"), 0)
-        importe = request.form.get("importe")
-        km_odometro = request.form.get("km_odometro")
+
+        importe_raw = request.form.get("importe")
+        km_odometro_raw = request.form.get("km_odometro")
 
         # normaliza opcionales
-        importe_val = fnum(importe, litros * precio_litro)
+        importe_val = fnum(importe_raw, litros * precio_litro)
+
         km_odo_val = None
-        if km_odometro not in (None, ""):
+        if km_odometro_raw not in (None, ""):
             try:
-                km_odo_val = float(km_odometro)
+                km_odo_val = float(km_odometro_raw)
             except:
                 km_odo_val = None
+
+        # ticket upload (opcional)
+        ticket_path = None
+        ticket_file = request.files.get("ticket_file")
+        if ticket_file and ticket_file.filename:
+            os.makedirs("uploads", exist_ok=True)
+            safe_name = ticket_file.filename.replace("/", "_").replace("\\", "_")
+            saved_name = f"ticket_{date.today().isoformat()}_{safe_name}"
+            full_path = os.path.join("uploads", saved_name)
+            ticket_file.save(full_path)
+            ticket_path = saved_name
 
         # validaciones
         if not fecha:
@@ -323,10 +349,10 @@ def repostajes():
             cur = conn.cursor()
             cur.execute(
                 """
-                INSERT INTO repostajes(fecha, litros, precio_litro, importe, km_odometro, estacion)
-                VALUES(?,?,?,?,?,?)
+                INSERT INTO repostajes(fecha, litros, precio_litro, importe, km_odometro, estacion, tipo, conductor_id, ticket_path)
+                VALUES(?,?,?,?,?,?,?,?,?)
                 """,
-                (fecha, litros, precio_litro, importe_val, km_odo_val, estacion)
+                (fecha, litros, precio_litro, importe_val, km_odo_val, estacion, tipo, conductor_id, ticket_path)
             )
             conn.commit()
             conn.close()
@@ -334,6 +360,12 @@ def repostajes():
 
     conn = get_conn()
     cur = conn.cursor()
+
+    # para el select de chofer
+    cur.execute("SELECT id, username FROM users WHERE active=1 ORDER BY username")
+    conductores = cur.fetchall()
+
+    # tabla de repostajes
     cur.execute("""
       SELECT
         r.*,
@@ -352,8 +384,10 @@ def repostajes():
         page_title="Repostajes",
         page_subtitle="Registro de combustible",
         rows=rows,
+        conductores=conductores,
         error=error
     )
+
 
 # -------------------------
 # Tacógrafo
