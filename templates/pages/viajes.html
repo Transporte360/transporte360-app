@@ -3,8 +3,12 @@
 {% block content %}
 
   <div class="card card-pad">
-    <div class="h2">Nuevo viaje</div>
-    <div class="tiny">Si dejas KM inicio vacío, se usa el último KM fin del mismo camión.</div>
+    <div class="row" style="justify-content:space-between; align-items:flex-end; gap:10px">
+      <div>
+        <div class="h2">Nuevo viaje</div>
+        <div class="tiny">Registro básico (fecha, origen, destino, km y peso). El resto lo añadimos después.</div>
+      </div>
+    </div>
 
     {% if error %}
       <div class="alert" style="margin-top:14px">
@@ -16,7 +20,7 @@
       </div>
     {% endif %}
 
-    <form method="post" enctype="multipart/form-data" class="grid g3" style="margin-top:14px">
+    <form method="post" class="grid g3" style="margin-top:14px">
 
       <div class="field">
         <div class="label">📅 Fecha</div>
@@ -24,13 +28,13 @@
       </div>
 
       <div class="field">
-        <div class="label">🚚 Matrícula</div>
-        <input class="input" name="camion_matricula" placeholder="1234ABC" required style="padding-left:12px; text-transform:uppercase">
+        <div class="label">⚖️ Peso (kg)</div>
+        <input class="input" type="number" step="1" name="peso_kg" placeholder="24000" style="padding-left:12px">
       </div>
 
       <div class="field">
-        <div class="label">⚖️ Peso (kg)</div>
-        <input class="input" type="number" step="1" name="peso_kg" placeholder="24000" style="padding-left:12px">
+        <div class="label">🧾 KM inicio</div>
+        <input class="input" type="number" step="1" name="km_inicio" placeholder="Ej: 244200" style="padding-left:12px">
       </div>
 
       <div class="field">
@@ -44,22 +48,12 @@
       </div>
 
       <div class="field">
-        <div class="label">📎 CMR</div>
-        <input class="input" type="file" name="cmr_file" accept=".pdf,.jpg,.jpeg,.png" style="padding-left:12px">
-      </div>
-
-      <div class="field">
-        <div class="label">🧾 KM inicio</div>
-        <input class="input" type="number" step="1" name="km_inicio" placeholder="(vacío = auto)" style="padding-left:12px">
-      </div>
-
-      <div class="field">
         <div class="label">🧾 KM fin</div>
         <input class="input" type="number" step="1" name="km_fin" placeholder="Ej: 245000" required style="padding-left:12px">
       </div>
 
-      <div class="field" style="display:flex; justify-content:flex-end">
-        <button class="btn btn-primary" type="submit" style="width:100%">Guardar viaje</button>
+      <div class="field" style="grid-column: 1 / -1; display:flex; justify-content:flex-end">
+        <button class="btn btn-primary" type="submit">Guardar viaje</button>
       </div>
 
     </form>
@@ -78,11 +72,9 @@
         <thead>
           <tr>
             <th style="text-align:left; padding:10px; border-bottom:1px solid var(--border)">Fecha</th>
-            <th style="text-align:left; padding:10px; border-bottom:1px solid var(--border)">Camión</th>
             <th style="text-align:left; padding:10px; border-bottom:1px solid var(--border)">Origen → Destino</th>
             <th style="text-align:right; padding:10px; border-bottom:1px solid var(--border)">KM</th>
-            <th style="text-align:left; padding:10px; border-bottom:1px solid var(--border)">CMR</th>
-            <th style="text-align:left; padding:10px; border-bottom:1px solid var(--border)">Creado por</th>
+            <th style="text-align:right; padding:10px; border-bottom:1px solid var(--border)">Peso (kg)</th>
           </tr>
         </thead>
         <tbody>
@@ -90,22 +82,23 @@
             {% for r in rows %}
               <tr>
                 <td style="padding:10px; border-bottom:1px solid var(--border)">{{ r.fecha }}</td>
-                <td style="padding:10px; border-bottom:1px solid var(--border)"><b>{{ r.camion_matricula }}</b></td>
-                <td style="padding:10px; border-bottom:1px solid var(--border)">{{ r.origen }} → {{ r.destino }}</td>
+
+                <td style="padding:10px; border-bottom:1px solid var(--border)">
+                  <b>{{ r.origen }}</b> → <b>{{ r.destino }}</b>
+                </td>
+
                 <td style="padding:10px; border-bottom:1px solid var(--border); text-align:right">
                   <b>{{ "%.0f"|format(r.km_total) }}</b>
                   <div class="tiny">{{ "%.0f"|format(r.km_inicio) }} → {{ "%.0f"|format(r.km_fin) }}</div>
                 </td>
-                <td style="padding:10px; border-bottom:1px solid var(--border)">
-                  {% if r.cmr_path %}
-                    <a href="{{ url_for('serve_upload', subpath=r.cmr_path) }}" target="_blank">Ver CMR</a>
-                  {% else %} — {% endif %}
+
+                <td style="padding:10px; border-bottom:1px solid var(--border); text-align:right">
+                  {{ "%.0f"|format(r.peso_kg) }}
                 </td>
-                <td style="padding:10px; border-bottom:1px solid var(--border)">{{ r.created_by }} <span class="tiny">({{ r.created_role }})</span></td>
               </tr>
             {% endfor %}
           {% else %}
-            <tr><td colspan="6" class="muted" style="padding:12px">Sin viajes aún.</td></tr>
+            <tr><td colspan="4" class="muted" style="padding:12px">Sin viajes aún.</td></tr>
           {% endif %}
         </tbody>
       </table>
@@ -113,3 +106,4 @@
   </div>
 
 {% endblock %}
+
