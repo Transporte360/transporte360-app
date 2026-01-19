@@ -20,11 +20,31 @@
       </div>
     {% endif %}
 
-    <form method="post" class="grid g3" style="margin-top:14px">
+    <form method="post" enctype="multipart/form-data" class="grid g3" style="margin-top:14px">
 
       <div class="field">
         <div class="label">📅 Fecha</div>
         <input class="input" type="date" name="fecha" required style="padding-left:12px">
+      </div>
+
+      <div class="field">
+        <div class="label">🧪 Tipo</div>
+        <select class="input" name="tipo" style="padding-left:12px">
+          <option value="gasoil" selected>Gasoil</option>
+          <option value="adblue">AdBlue</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="label">👷 Chofer</div>
+        <select class="input" name="conductor_id" style="padding-left:12px">
+          <option value="">—</option>
+          {% if conductores %}
+            {% for c in conductores %}
+              <option value="{{ c.id }}">{{ c.username }}</option>
+            {% endfor %}
+          {% endif %}
+        </select>
       </div>
 
       <div class="field">
@@ -52,8 +72,13 @@
         <input class="input" name="estacion" placeholder="Ej: Repsol A-2 km 312" style="padding-left:12px">
       </div>
 
-      <div class="field" style="grid-column: 1 / -1; display:flex; justify-content:flex-end">
-        <button class="btn btn-primary" type="submit">Guardar repostaje</button>
+      <div class="field">
+        <div class="label">📎 Ticket</div>
+        <input class="input" type="file" name="ticket_file" accept=".pdf,.jpg,.jpeg,.png" style="padding-left:12px">
+      </div>
+
+      <div class="field" style="display:flex; justify-content:flex-end">
+        <button class="btn btn-primary" type="submit" style="width:100%">Guardar repostaje</button>
       </div>
 
     </form>
@@ -72,11 +97,14 @@
         <thead>
           <tr>
             <th style="text-align:left; padding:10px; border-bottom:1px solid var(--border)">Fecha</th>
+            <th style="text-align:left; padding:10px; border-bottom:1px solid var(--border)">Tipo</th>
+            <th style="text-align:left; padding:10px; border-bottom:1px solid var(--border)">Chofer</th>
             <th style="text-align:left; padding:10px; border-bottom:1px solid var(--border)">Estación</th>
             <th style="text-align:right; padding:10px; border-bottom:1px solid var(--border)">Litros</th>
             <th style="text-align:right; padding:10px; border-bottom:1px solid var(--border)">€/L</th>
             <th style="text-align:right; padding:10px; border-bottom:1px solid var(--border)">Importe</th>
             <th style="text-align:right; padding:10px; border-bottom:1px solid var(--border)">KM</th>
+            <th style="text-align:left; padding:10px; border-bottom:1px solid var(--border)">Ticket</th>
           </tr>
         </thead>
         <tbody>
@@ -84,6 +112,18 @@
             {% for r in rows %}
               <tr>
                 <td style="padding:10px; border-bottom:1px solid var(--border)">{{ r.fecha }}</td>
+
+                <td style="padding:10px; border-bottom:1px solid var(--border)">
+                  <b>{{ (r.tipo or "gasoil")|capitalize }}</b>
+                </td>
+
+                <td style="padding:10px; border-bottom:1px solid var(--border)">
+                  {% if r.conductor_id %}
+                    <span class="tiny">ID {{ r.conductor_id }}</span>
+                  {% else %}
+                    <span class="muted">—</span>
+                  {% endif %}
+                </td>
 
                 <td style="padding:10px; border-bottom:1px solid var(--border)">
                   {% if r.estacion %}{{ r.estacion }}{% else %}<span class="muted">—</span>{% endif %}
@@ -111,10 +151,18 @@
                     <span class="muted">—</span>
                   {% endif %}
                 </td>
+
+                <td style="padding:10px; border-bottom:1px solid var(--border)">
+                  {% if r.ticket_path %}
+                    <a href="{{ url_for('serve_upload', subpath=r.ticket_path) }}" target="_blank">Ver</a>
+                  {% else %}
+                    <span class="muted">—</span>
+                  {% endif %}
+                </td>
               </tr>
             {% endfor %}
           {% else %}
-            <tr><td colspan="6" class="muted" style="padding:12px">Sin repostajes aún.</td></tr>
+            <tr><td colspan="9" class="muted" style="padding:12px">Sin repostajes aún.</td></tr>
           {% endif %}
         </tbody>
       </table>
@@ -122,3 +170,4 @@
   </div>
 
 {% endblock %}
+
