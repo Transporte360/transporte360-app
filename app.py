@@ -18,6 +18,17 @@ def get_conn():
     return conn
 
 
+def ensure_column(cur, table, column, definition_sql):
+    """
+    Añade columna si no existe. No revienta si ya está.
+    definition_sql ejemplo: "tipo TEXT NOT NULL DEFAULT 'gasoil'"
+    """
+    cur.execute(f"PRAGMA table_info({table})")
+    cols = [r["name"] for r in cur.fetchall()]
+    if column not in cols:
+        cur.execute(f"ALTER TABLE {table} ADD COLUMN {definition_sql}")
+
+
 def init_db():
     conn = get_conn()
     cur = conn.cursor()
@@ -56,6 +67,11 @@ def init_db():
     )
     """)
 
+    # columnas nuevas de repostajes (si no existen)
+    ensure_column(cur, "repostajes", "tipo", "tipo TEXT NOT NULL DEFAULT 'gasoil'")
+    ensure_column(cur, "repostajes", "conductor_id", "conductor_id INTEGER")
+    ensure_column(cur, "repostajes", "ticket_path", "ticket_path TEXT")
+
     cur.execute("""
     CREATE TABLE IF NOT EXISTS tacografo (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -90,6 +106,7 @@ def init_db():
     cur.execute("SELECT 1 FROM users WHERE username='Admin'")
     if not cur.fetchone():
         cur.execute("INSERT INTO users(username,pin,role,active) VALUES(?,?,?,1)", ("Admin", "9999", "manager"))
+
     cur.execute("SELECT 1 FROM users WHERE username='Mohsin'")
     if not cur.fetchone():
         cur.execute("INSERT INTO users(username,pin,role,active) VALUES(?,?,?,1)", ("Mohsin", "1111", "driver"))
@@ -183,7 +200,6 @@ def index():
 def dashboard():
     u = current_user()
 
-    # KPIs demo basados en DB real (simple)
     conn = get_conn()
     cur = conn.cursor()
 
@@ -193,8 +209,8 @@ def dashboard():
     cur.execute("SELECT IFNULL(SUM(km_fin-km_inicio),0) AS km FROM viajes")
     km_total = float(cur.fetchone()["km"] or 0)
 
-    cur.execute("SELECT IFNULL(SUM(importe),0) AS gasoil FROM repostajes")
-    gasoil_total = float(cur.fetchone()["gasoil"] or 0)
+    cur.execute("SELECT IFNULL(SUM(importe),0) AS total FROM repostajes")
+    repostajes_total = float(cur.fetchone()["total"] or 0)
 
     cur.execute("SELECT IFNULL(SUM(horas_conduccion),0) AS h FROM tacografo")
     horas = float(cur.fetchone()["h"] or 0)
@@ -209,9 +225,10 @@ def dashboard():
         page_subtitle=f"Resumen general · {date.today().isoformat()}",
         total_viajes=total_viajes,
         km_total=km_total,
-        gasoil_total=gasoil_total,
+        gasoil_total=repostajes_total,
         horas_conduccion=horas,
     )
+
 
 # -------------------------
 # Serve uploads (CMR / tickets)
@@ -219,9 +236,9 @@ def dashboard():
 @app.route("/uploads/<path:subpath>")
 @login_required
 def serve_upload(subpath):
-    # Seguridad simple: evita rutas raras
     subpath = (subpath or "").replace("..", "").lstrip("/").lstrip("\\")
     return send_from_directory("uploads", subpath, as_attachment=False)
+
 
 # -------------------------
 # Viajes
@@ -265,13 +282,13 @@ def viajes():
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("""
-  SELECT
-    v.*,
-    (v.km_fin - v.km_inicio) AS km_total
-  FROM viajes v
-  ORDER BY v.id DESC
-  LIMIT 200
-""")
+      SELECT
+        v.*,
+        (v.km_fin - v.km_inicio) AS km_total
+      FROM viajes v
+      ORDER BY v.id DESC
+      LIMIT 200
+    """)
     rows = cur.fetchall()
     conn.close()
 
@@ -323,7 +340,6 @@ def repostajes():
         importe_raw = request.form.get("importe")
         km_odometro_raw = request.form.get("km_odometro")
 
-        # normaliza opcionales
         importe_val = fnum(importe_raw, litros * precio_litro)
 
         km_odo_val = None
@@ -344,7 +360,6 @@ def repostajes():
             ticket_file.save(full_path)
             ticket_path = saved_name
 
-        # validaciones
         if not fecha:
             error = "Falta la fecha."
         elif litros <= 0:
@@ -370,11 +385,11 @@ def repostajes():
     conn = get_conn()
     cur = conn.cursor()
 
-    # para el select de chofer
+    # select chofer
     cur.execute("SELECT id, username FROM users WHERE active=1 ORDER BY username")
     conductores = cur.fetchall()
 
-    # tabla de repostajes
+    # tabla
     cur.execute("""
       SELECT
         r.*,
